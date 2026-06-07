@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BottleCRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+<style>
+:root {
+  --bg: #0f0f0f; --surface: #1a1a1a; --surface2: #222;
+  --border: #2a2a2a; --border2: #333;
+  --accent: #c8f542; --accent2: #9dd430;
+  --text: #f0f0f0; --muted: #888;
+  --danger: #ff5a5a; --warning: #ffb84d; --success: #4dffb4; --blue: #5ab4ff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; font-size: 13px; }
+.app { display: flex; flex-direction: column; height: 100vh; }
+
+/* TOPBAR */
+.topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 20px; height: 56px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 12px; }
+.logo { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; flex-shrink: 0; }
+.logo span { color: var(--accent); }
+.stats-bar { display: flex; gap: 20px; }
+.stat-num { font-family: 'DM Mono', monospace; font-size: 18px; font-weight: 500; color: var(--accent); text-align: center; }
+.stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; text-align: center; }
+
+/* SAVE/LOAD BUTTONS in topbar */
+.topbar-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.tb-btn { display: flex; align-items: center; gap: 6px; background: none; border: 1px solid var(--border2); color: var(--muted); border-radius: 8px; padding: 7px 13px; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+.tb-btn:hover { color: var(--text); border-color: var(--accent); }
+.tb-btn.save-btn { border-color: #c8f54255; color: var(--accent); }
+.tb-btn.save-btn:hover { background: #c8f54215; }
+
+/* TOAST */
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--surface); border: 1px solid var(--border2); border-radius: 10px; padding: 12px 20px; font-size: 13px; color: var(--text); z-index: 9999; transition: transform 0.25s ease; pointer-events: none; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.success { border-color: #4dffb455; color: var(--success); }
+.toast.error { border-color: #ff5a5a55; color: var(--danger); }
+
+/* NAV */
+.nav { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; gap: 2px; padding: 0 20px; flex-shrink: 0; }
+.nav-btn { background: none; border: none; color: var(--muted); padding: 12px 16px; font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; }
+.nav-btn:hover { color: var(--text); }
+.nav-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+.main { flex: 1; overflow: hidden; }
+.view { display: none; height: 100%; overflow-y: auto; padding: 20px; flex-direction: column; gap: 14px; }
+.view.active { display: flex; }
+
+/* TOOLBAR */
+.toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.search-box { flex: 1; min-width: 180px; background: var(--surface); border: 1px solid var(--border2); border-radius: 10px; padding: 10px 14px; color: var(--text); font-family: 'Syne', sans-serif; font-size: 13px; outline: none; }
+.search-box:focus { border-color: var(--accent); }
+.filter-select { background: var(--surface); border: 1px solid var(--border2); border-radius: 10px; padding: 10px 12px; color: var(--text); font-family: 'Syne', sans-serif; font-size: 12px; outline: none; cursor: pointer; }
+.filter-select option { background: #222; }
+.btn { background: var(--accent); color: #0f0f0f; border: none; border-radius: 10px; padding: 10px 18px; font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.15s; white-space: nowrap; }
+.btn:hover { background: var(--accent2); }
+.btn-ghost { background: none; border: 1px solid var(--border2); color: var(--text); border-radius: 10px; padding: 9px 14px; font-family: 'Syne', sans-serif; font-size: 13px; cursor: pointer; transition: border-color 0.15s; }
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+.btn-danger { background: none; border: 1px solid #ff5a5a44; color: var(--danger); border-radius: 8px; padding: 8px 14px; font-family: 'Syne', sans-serif; font-size: 12px; cursor: pointer; }
+.btn-danger:hover { background: #ff5a5a22; }
+
+/* CARDS */
+.cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; }
+.customer-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; cursor: pointer; transition: border-color 0.15s, transform 0.1s; }
+.customer-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+.customer-card.urgent { border-left: 3px solid var(--danger); }
+.customer-card.soon { border-left: 3px solid var(--warning); }
+.card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+.av-0 { background: #0f3d2e; color: #4dffb4; }
+.av-1 { background: #0d2a3d; color: #5ab4ff; }
+.av-2 { background: #3d2800; color: #ffb84d; }
+.av-3 { background: #3d1010; color: #ff8080; }
+.av-4 { background: #2a1a3d; color: #c084fc; }
+.card-name { font-size: 15px; font-weight: 600; }
+.card-sub { font-size: 11px; color: var(--muted); }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.tag { font-size: 10px; font-weight: 500; padding: 3px 9px; border-radius: 20px; border: 1px solid; font-family: 'DM Mono', monospace; }
+.t-bottles { background: #0f3d2e22; color: #4dffb4; border-color: #4dffb444; }
+.t-money { background: #0d2a3d22; color: #5ab4ff; border-color: #5ab4ff44; }
+.t-warn { background: #3d280022; color: #ffb84d; border-color: #ffb84d44; }
+.t-urgent { background: #3d101022; color: #ff5a5a; border-color: #ff5a5a44; }
+.t-ref { background: #1a3d2222; color: #4dffb4; border-color: #4dffb444; }
+.card-note { font-size: 11px; color: var(--muted); line-height: 1.5; margin-bottom: 10px; }
+.card-actions { display: flex; gap: 6px; border-top: 1px solid var(--border); padding-top: 10px; }
+.act-btn { flex: 1; background: none; border: 1px solid var(--border2); color: var(--muted); border-radius: 7px; padding: 6px; font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+.act-btn:hover { color: var(--accent); border-color: var(--accent); }
+.filter-btn { background:var(--surface2); color:var(--text); border:1px solid var(--border2); border-radius:20px; padding:6px 14px; font-size:12px; font-weight:500; cursor:pointer; white-space:nowrap; transition:all 0.2s; }
+.filter-btn.active { background:var(--accent); color:#000; border-color:var(--accent); font-weight:700; }
+
+.empty-state { grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--muted); }
+.empty-icon { font-size: 48px; margin-bottom: 14px; opacity: 0.4; }
+.empty-title { font-size: 16px; color: var(--text); margin-bottom: 8px; }
+
+/* MODAL */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--surface); border: 1px solid var(--border2); border-radius: 18px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; padding: 24px; }
+.modal-title { font-size: 18px; font-weight: 700; margin-bottom: 18px; color: var(--accent); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-full { grid-column: 1/-1; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.form-input, .form-select, .form-textarea { background: var(--surface2); border: 1px solid var(--border2); border-radius: 10px; padding: 10px 12px; color: var(--text); font-family: 'Syne', sans-serif; font-size: 13px; outline: none; width: 100%; }
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+.form-textarea { resize: vertical; min-height: 72px; }
+.form-select option { background: #222; }
+.modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+
+/* FOLLOWUP */
+.fu-list { display: flex; flex-direction: column; gap: 10px; }
+.fu-item { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; }
+.fu-item.urgent { border-left: 3px solid var(--danger); }
+.fu-item.soon { border-left: 3px solid var(--warning); }
+.badge { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.badge-red { background: var(--danger); }
+.badge-yellow { background: var(--warning); }
+.badge-green { background: var(--success); }
+.fu-info { flex: 1; }
+.fu-name { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+.fu-detail { font-size: 11px; color: var(--muted); }
+.fu-btns { display: flex; gap: 6px; }
+.section-head { font-size: 14px; font-weight: 600; color: var(--text); }
+.detail-section { margin-bottom: 18px; }
+.detail-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+.detail-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+.detail-row:last-child { border-bottom: none; }
+.detail-key { color: var(--muted); }
+.detail-val { color: var(--text); font-weight: 500; text-align: right; max-width: 55%; }
+
+.sugg-item { padding: 8px 12px; cursor: pointer; font-size: 12px; border-bottom: 1px solid var(--border2); transition: background 0.15s; }
+.sugg-item:last-child { border-bottom: none; }
+.sugg-item:hover { background: #2a2a2a; color: var(--accent); }
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ACTION BUTTONS -->
+  <div class="topbar-actions" style="padding: 10px 20px; background: var(--surface); border-bottom: 1px solid var(--border); justify-content: flex-start; position: sticky; top: 0; z-index: 100;">
+    <button class="tb-btn" id="btnUndo" onclick="undo()" title="Undo (Ctrl+Z)" style="opacity:0.3; cursor:default;">↩ Undo</button>
+    <button class="tb-btn" id="btnRedo" onclick="redo()" title="Redo (Ctrl+Y)" style="opacity:0.3; cursor:default;">↪ Redo</button>
+    <button class="tb-btn save-btn" onclick="exportData()" title="নির্দিষ্ট ফাইলে ডেটা সেভ করো">
+      💾 Save File
+    </button>
+    <button class="tb-btn" onclick="openFile()" title="ফাইল থেকে ডেটা লোড করো">
+      📂 Open File
+    </button>
+  </div>
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="logo">Bottle<span>CRM</span></div>
+    <div class="stats-bar">
+      <div class="stat"><div class="stat-num" id="statTotal">0</div><div class="stat-label">Customers</div></div>
+      <div class="stat"><div class="stat-num" id="statProspects">0</div><div class="stat-label">Prospects</div></div>
+      <div class="stat"><div class="stat-num" id="statBirddogs">0</div><div class="stat-label">Birddogs</div></div>
+      <div class="stat"><div class="stat-num" id="statFu">0</div><div class="stat-label">Follow-ups</div></div>
+      <div class="stat"><div class="stat-num" id="statBottles">0</div><div class="stat-label">Bottles</div></div>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <div class="nav">
+    <button class="nav-btn active" onclick="showView('customers',this)">Customers</button>
+    <button class="nav-btn" onclick="showView('prospects',this)">Prospects</button>
+    <button class="nav-btn" onclick="showView('birddogs',this)">Birddogs</button>
+    <button class="nav-btn" onclick="showView('followup',this)">Follow-up</button>
+    <button class="nav-btn" onclick="showView('monthly',this)">Monthly Ping</button>
+  </div>
+
+  <div class="main">
+
+    <!-- CUSTOMERS -->
+    <div class="view active" id="view-customers">
+      <div class="toolbar">
+        <input class="search-box" type="text" placeholder="নাম বা নম্বর দিয়ে খোঁজো..." oninput="renderCustomers()" id="searchInput">
+        <select class="filter-select" onchange="renderCustomers()" id="filterType">
+          <option value="">সব ধরন</option>
+          <option value="corporate">Corporate</option>
+          <option value="wedding">Wedding</option>
+          <option value="birthday">Birthday</option>
+          <option value="event">Event</option>
+          <option value="other">Other</option>
+        </select>
+        <button class="btn" onclick="openAddModal('customer')">+ নতুন Customer</button>
+      </div>
+      <div class="cards-grid" id="customerCards"></div>
+    </div>
+
+    <!-- PROSPECTS -->
+    <div class="view" id="view-prospects">
+      <div class="toolbar">
+        <input class="search-box" type="text" placeholder="নাম বা নম্বর দিয়ে খোঁজো..." oninput="renderProspects()" id="searchProspectInput">
+        <button class="btn" style="background:#5ab4ff; color:#0d2a3d;" onclick="openAddModal('prospect')">+ নতুন Prospect</button>
+      </div>
+      <div class="cards-grid" id="prospectCards"></div>
+    </div>
+
+    <!-- BIRDDOGS -->
+    <div class="view" id="view-birddogs">
+      <div class="toolbar">
+        <input class="search-box" type="text" placeholder="নাম বা নম্বর দিয়ে খোঁজো..." oninput="renderBirddogs()" id="searchBirddogInput">
+        <button class="btn" style="background:#c084fc; color:#2a1a3d;" onclick="openAddBirddogModal()">+ নতুন Birddog</button>
+      </div>
+      <div class="cards-grid" id="birddogCards"></div>
+    </div>
+
+    <!-- FOLLOW-UP -->
+    <div class="view" id="view-followup">
+      <div class="section-head" id="fuHeading">Follow-up লিস্ট</div>
+      <div style="display:flex; gap:8px; margin:0 20px 15px 20px; overflow-x:auto; padding-bottom:5px;">
+        <button class="filter-btn active" onclick="setFuFilter('all')" id="fuFilter-all">সবাই</button>
+        <button class="filter-btn" onclick="setFuFilter('customer')" id="fuFilter-customer">Customers</button>
+        <button class="filter-btn" onclick="setFuFilter('prospect')" id="fuFilter-prospect">Prospects</button>
+        <button class="filter-btn" onclick="setFuFilter('birddog')" id="fuFilter-birddog">Birddogs</button>
+      </div>
+      <div class="fu-list" id="followupList"></div>
+    </div>
+
+    <!-- MONTHLY PING -->
+    <div class="view" id="view-monthly">
+      <div class="section-head">এই মাসে message করো</div>
+      <p style="font-size:12px;color:var(--muted);margin-top:4px;margin-bottom:4px">Girard-এর system — প্রতি মাসে সব customer-দের একটা message। Sales pitch না, শুধু exist করার জন্য।</p>
+      <div class="fu-list" id="monthlyList"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- BIRDDOG MODAL -->
+<div class="modal-overlay" id="birddogModal">
+  <div class="modal">
+    <div class="modal-title" id="birddogModalTitle">নতুন Birddog</div>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">নাম *</label><input class="form-input" id="b-name" placeholder="রাহেল ভাই"></div>
+      <div class="form-group"><label class="form-label">নম্বর *</label><input class="form-input" id="b-phone" placeholder="01XXXXXXXXX"></div>
+      <div class="form-group"><label class="form-label">Role / ধরন</label><input class="form-input" id="b-job" placeholder="সাপ্লাইয়ার"></div>
+      <div class="form-group"><label class="form-label">Refer করেছে (কয়টা)</label><input class="form-input" type="number" id="b-qty" placeholder="2"></div>
+      <div class="form-group"><label class="form-label">মোট টাকা দিয়েছি (৳)</label><input class="form-input" type="number" id="b-price" placeholder="150"></div>
+      <div class="form-group"><label class="form-label">শেষ Contact</label><input class="form-input" type="date" id="b-date"></div>
+      <div class="form-group"><label class="form-label">পরের Contact</label><input class="form-input" type="date" id="b-followup"></div>
+      <div class="form-group form-full"><label class="form-label">নোট</label><textarea class="form-textarea" id="b-notes" placeholder="কোথায় কোথায় refer করেছে..."></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeBirddogModal()">বাতিল</button>
+      <button class="btn" onclick="saveBirddog()" id="saveBirddogBtn">সংরক্ষণ করো</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">নতুন Customer</div>
+    <div class="form-grid">
+      <div class="form-group form-full">
+        <label class="form-label">অবস্থা (Status)</label>
+        <select class="form-select" id="f-status" style="border-color:var(--accent);">
+          <option value="customer">Customer (কিনেছেন)</option>
+          <option value="prospect">Prospect (এখনও কেনেনি, কথা চলছে)</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">নাম *</label><input class="form-input" id="f-name" placeholder="Karim bhai"></div>
+      <div class="form-group"><label class="form-label">নম্বর *</label><input class="form-input" id="f-phone" placeholder="01XXXXXXXXX"></div>
+      <div class="form-group"><label class="form-label">Order ধরন</label>
+        <select class="form-select" id="f-type">
+          <option value="corporate">Corporate</option>
+          <option value="wedding">Wedding</option>
+          <option value="birthday">Birthday</option>
+          <option value="event">Event</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">কত Bottle</label><input class="form-input" type="number" id="f-qty" placeholder="200"></div>
+      <div class="form-group"><label class="form-label">দাম/piece (৳)</label><input class="form-input" type="number" id="f-price" placeholder="18"></div>
+      <div class="form-group"><label class="form-label">Delivery তারিখ</label><input class="form-input" type="date" id="f-date"></div>
+      <div class="form-group"><label class="form-label">Follow-up তারিখ</label><input class="form-input" type="date" id="f-followup"></div>
+      <div class="form-group"><label class="form-label">Referral source</label><input class="form-input" id="f-ref" placeholder="কে পাঠিয়েছে"></div>
+      <div class="form-group form-full">
+        <label class="form-label">কাজ / এলাকা</label>
+        <div style="display:flex; gap:8px;">
+          <input class="form-input" id="f-job" placeholder="ঠিকানা বা এলাকা..." style="flex:1;">
+          <button type="button" class="btn" style="padding:10px 14px; background:#4dffb4; color:#0f3d2e;" onclick="openMapModal()">🗺️ Map</button>
+        </div>
+      </div>
+      <div class="form-group form-full"><label class="form-label">ব্যক্তিগত নোট</label><textarea class="form-textarea" id="f-personal" placeholder="পরিবার, বিশেষ তথ্য..."></textarea></div>
+      <div class="form-group form-full"><label class="form-label">Order নোট</label><textarea class="form-textarea" id="f-notes" placeholder="Label color, design..."></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal()">বাতিল</button>
+      <button class="btn" onclick="saveCustomer()" id="saveBtn">সংরক্ষণ করো</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal">
+    <div id="detailContent"></div>
+    <div class="modal-actions">
+      <button class="btn-danger" id="detailDeleteBtn">মুছে ফেলো</button>
+      <button class="btn-ghost" onclick="document.getElementById('detailModal').classList.remove('open')">বন্ধ করো</button>
+      <button class="btn" id="detailEditBtn">Edit করো</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEXT FOLLOW-UP MODAL -->
+<div class="modal-overlay" id="nextFuModal" style="z-index: 250;">
+  <div class="modal" style="width:100%; max-width:350px;">
+    <div class="modal-title" style="margin-top:0">পরের Follow-up কবে?</div>
+    <div class="form-group form-full" style="margin-top: 15px;">
+      <label class="form-label">তারিখ নির্বাচন করুন</label>
+      <input type="date" id="nextFuDate" class="form-input">
+    </div>
+    <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
+      <button class="btn-ghost" style="padding:6px 10px; font-size:12px; flex:1;" onclick="setNextFuDays(7)">+7 দিন</button>
+      <button class="btn-ghost" style="padding:6px 10px; font-size:12px; flex:1;" onclick="setNextFuDays(15)">+15 দিন</button>
+      <button class="btn-ghost" style="padding:6px 10px; font-size:12px; flex:1;" onclick="setNextFuDays(30)">+1 মাস</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="document.getElementById('nextFuModal').classList.remove('open')">বাতিল</button>
+      <button class="btn" onclick="confirmNextFu()">সেভ করো</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAP MODAL -->
+<div class="modal-overlay" id="mapModal" style="z-index:200;">
+  <div class="modal" style="width:100%; max-width:600px; padding:20px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <div class="modal-title" style="margin:0;">ম্যাপ থেকে এলাকা বেছে নিন</div>
+      <button type="button" class="btn-ghost" onclick="closeMapModal()" style="padding:4px 10px; font-size:16px;">✕</button>
+    </div>
+    <div id="mapView" style="height: 350px; width: 100%; border-radius:12px; background:#e0e0e0; z-index:1;"></div>
+    <div style="margin-top:14px; display:flex; gap:10px; align-items:center;">
+      <div id="mapAddress" style="flex:1; font-size:12px; color:var(--text); background:var(--surface2); padding:10px 12px; border-radius:10px; border:1px solid var(--border2); min-height:38px; display:flex; align-items:center;">লোকেশন লোড হচ্ছে...</div>
+      <button type="button" class="btn" onclick="confirmMapLocation()">📍 সিলেক্ট করুন</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY = 'bottlecrm_v1';
+let customers = [];
+let editingId = null;
+let editingBirddogId = null;
+const typeLabel = { corporate:'Corporate', wedding:'Wedding', birthday:'Birthday', event:'Event', other:'Other', birddog:'Birddog' };
+
+/* ── UNDO / REDO ── */
+let undoStack = [];
+let redoStack = [];
+
+function saveStateToHistory() {
+  if (undoStack.length >= 50) undoStack.shift();
+  undoStack.push(JSON.stringify(customers));
+  redoStack = [];
+  updateUndoRedoUI();
+}
+
+function undo() {
+  if (undoStack.length === 0) return;
+  redoStack.push(JSON.stringify(customers));
+  customers = JSON.parse(undoStack.pop());
+  save();
+  refreshAllViews();
+  updateUndoRedoUI();
+  showToast('Undo successful', 'success');
+}
+
+function redo() {
+  if (redoStack.length === 0) return;
+  undoStack.push(JSON.stringify(customers));
+  customers = JSON.parse(redoStack.pop());
+  save();
+  refreshAllViews();
+  updateUndoRedoUI();
+  showToast('Redo successful', 'success');
+}
+
+function refreshAllViews() {
+  if (typeof renderCustomers === 'function') renderCustomers();
+  if (typeof renderProspects === 'function') renderProspects();
+  if (typeof renderBirddogs === 'function') renderBirddogs();
+  if (typeof renderFollowup === 'function') renderFollowup();
+  if (typeof renderMonthly === 'function') renderMonthly();
+}
+
+function updateUndoRedoUI() {
+  const uBtn = document.getElementById('btnUndo');
+  const rBtn = document.getElementById('btnRedo');
+  if(uBtn) uBtn.style.opacity = undoStack.length === 0 ? '0.3' : '1';
+  if(uBtn) uBtn.style.cursor = undoStack.length === 0 ? 'default' : 'pointer';
+  if(rBtn) rBtn.style.opacity = redoStack.length === 0 ? '0.3' : '1';
+  if(rBtn) rBtn.style.cursor = redoStack.length === 0 ? 'default' : 'pointer';
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.ctrlKey && e.key === 'z') {
+    e.preventDefault();
+    undo();
+  } else if ((e.ctrlKey && e.key === 'y') || (e.ctrlKey && e.shiftKey && e.key === 'Z')) {
+    e.preventDefault();
+    redo();
+  }
+});
+
+/* ── DATA ── */
+let fileHandle = null;
+
+function load() {
+  try { customers = JSON.parse(localStorage.getItem(KEY)) || demo(); }
+  catch(e) { customers = demo(); }
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(customers)); } catch(e){}
+}
+
+/* ── EXPORT (Save File API) ── */
+async function exportData() {
+  const payload = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    customers: customers
+  };
+  const json = JSON.stringify(payload, null, 2);
+  
+  const now = new Date();
+  const dateStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0') + '_' + String(now.getHours()).padStart(2, '0') + '-' + String(now.getMinutes()).padStart(2, '0');
+  
+  try {
+    if (!fileHandle) {
+      fileHandle = await window.showSaveFilePicker({
+        suggestedName: `BottleCRM_Data_${dateStr}.json`,
+        types: [{
+          description: 'JSON Files',
+          accept: { 'application/json': ['.json'] },
+        }],
+      });
+    }
+    const writable = await fileHandle.createWritable();
+    await writable.write(json);
+    await writable.close();
+    showToast(`✓ ফাইলটি সফলভাবে সেভ হয়েছে`, 'success');
+  } catch (err) {
+    if (err.name !== 'AbortError') {
+      showToast('❌ সেভ করতে সমস্যা হয়েছে', 'error');
+    }
+  }
+}
+
+/* ── IMPORT (Load File API) ── */
+async function openFile() {
+  try {
+    const [handle] = await window.showOpenFilePicker({
+      types: [{
+        description: 'JSON Files',
+        accept: { 'application/json': ['.json'] },
+      }],
+    });
+    fileHandle = handle;
+    const file = await fileHandle.getFile();
+    const contents = await file.text();
+    
+    const parsed = JSON.parse(contents);
+    let incoming = [];
+    if (Array.isArray(parsed)) {
+      incoming = parsed;
+    } else if (parsed.customers && Array.isArray(parsed.customers)) {
+      incoming = parsed.customers;
+    } else {
+      showToast('❌ File format ঠিক নেই', 'error');
+      return;
+    }
+    if (!incoming.length) { showToast('❌ File-এ কোনো data নেই', 'error'); return; }
+    
+    if (confirm(`এই file-এ ${incoming.length}টি customer আছে। Load করলে বর্তমান data replace হবে। Continue?`)) {
+      saveStateToHistory();
+      customers = incoming;
+      save(); // Also triggers autoSaveToFile
+      renderCustomers();
+      showToast(`✓ ফাইল থেকে ${incoming.length}টি customer load হয়েছে`, 'success');
+    }
+  } catch (err) {
+    if (err.name !== 'AbortError') {
+      showToast('❌ ফাইল খুলতে সমস্যা হয়েছে', 'error');
+    }
+  }
+}
+
+/* ── TOAST ── */
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+/* ── DEMO DATA ── */
+function demo() {
+  const today = new Date();
+  const fmt = d => d.toISOString().split('T')[0];
+  const past = n => { const d=new Date(today); d.setDate(d.getDate()-n); return fmt(d); };
+  const future = n => { const d=new Date(today); d.setDate(d.getDate()+n); return fmt(d); };
+  return [
+    { id:'1', name:'Karim bhai', phone:'01711234567', type:'corporate', qty:200, price:18, date:past(45), followup:future(3), ref:'নিজে এসেছিলেন', job:'Islami Bank, Berhampore', personal:'২ ছেলে, বড়টার SSC 2026', notes:'Navy blue label, annual sports day', createdAt:past(50) },
+    { id:'2', name:'Sima apa', phone:'01812345678', type:'wedding', qty:300, price:15, date:future(10), followup:future(15), ref:'Karim bhai', job:'গৃহিণী, Jiaganj', personal:'বিয়ে ১৫ জুলাই', notes:'Pink label, bride নাম লেখা', createdAt:past(10) },
+    { id:'3', name:'Ratan da', phone:'01912345678', type:'corporate', qty:150, price:20, date:past(5), followup:past(2), ref:'Karim bhai', job:'HR Manager, Dutch Bangla Bank', personal:'', notes:'White label, company logo', createdAt:past(20) },
+  ];
+}
+
+/* ── HELPERS ── */
+function getNameForMsg(name) { const parts = name.trim().split(' '); return parts.length <= 1 ? name : parts.slice(0, -1).join(' '); }
+function renderDoneBtn(c, text="✓ Done") {
+  const waTime = c.waClickedAt || 0;
+  const doneTime = c.doneClickedAt || 0;
+  const today = new Date().toISOString().split('T')[0];
+  
+  if (c.lastDoneDate === today) {
+    if (waTime > doneTime) {
+      return `<button class="act-btn" style="background:#ffb84d;color:#000;border-color:#ffb84d;" onclick="event.stopPropagation();doneFu('${c.id}')">${text}</button>`;
+    } else {
+      return `<button class="act-btn" disabled style="opacity:0.4; cursor:not-allowed; border-color:transparent; background:transparent;">${text}</button>`;
+    }
+  }
+  
+  if (c.lastWaSent === today) {
+    return `<button class="act-btn" style="background:#ffb84d;color:#000;border-color:#ffb84d;" onclick="event.stopPropagation();doneFu('${c.id}')">${text}</button>`;
+  }
+  
+  return `<button class="act-btn" onclick="event.stopPropagation();doneFu('${c.id}')">${text}</button>`;
+}
+function initials(name) { return name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase(); }
+function fmtDate(d) { if(!d) return '—'; return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); }
+function daysUntil(d) { if(!d) return null; const t=new Date(); t.setHours(0,0,0,0); const x=new Date(d); x.setHours(0,0,0,0); return Math.round((x-t)/86400000); }
+function fuStatus(d) { const n=daysUntil(d); if(n===null) return 'ok'; if(n<0) return 'urgent'; if(n<=7) return 'soon'; return 'ok'; }
+
+function checkAutoAdvance() {
+  const today = new Date().toISOString().split('T')[0];
+  let changed = false;
+  customers.forEach(c => {
+    if (c.lastWaSent && c.followup === c.lastWaSent && c.lastWaSent < today) {
+       const d = new Date(c.lastWaSent);
+       d.setMonth(d.getMonth() + 1);
+       c.followup = d.toISOString().split('T')[0];
+       changed = true;
+    }
+  });
+  if (changed) save();
+}
+
+/* ── RENDER CUSTOMERS ── */
+function renderCustomers() {
+  checkAutoAdvance();
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const ft = document.getElementById('filterType').value;
+  let list = customers.filter(c => {
+    const isCust = c.status !== 'prospect' && c.status !== 'birddog';
+    const mq = !q || c.name.toLowerCase().includes(q) || c.phone.includes(q);
+    const mt = !ft || c.type === ft;
+    return isCust && mq && mt;
+  });
+  const el = document.getElementById('customerCards');
+  if (!list.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">কোনো customer নেই</div><p style="font-size:12px">নতুন customer যোগ করো বা আগের file load করো</p></div>`;
+  } else {
+    el.innerHTML = list.map((c,i) => {
+      const st = fuStatus(c.followup);
+      const total = (c.qty||0)*(c.price||0);
+      const days = daysUntil(c.followup);
+      let fuTag = '';
+      if(st==='urgent') fuTag = `<span class="tag t-urgent">⚠ Follow-up বাকি</span>`;
+      else if(st==='soon') fuTag = `<span class="tag t-warn">${days}d-এ follow-up</span>`;
+      return `<div class="customer-card ${st==='urgent'?'urgent':st==='soon'?'soon':''}" onclick="showDetail('${c.id}')">
+        <div class="card-header">
+          <div class="avatar av-${i%5}">${initials(c.name)}</div>
+          <div><div class="card-name">${c.name}</div><div class="card-sub">${typeLabel[c.type]||c.type}${c.job?' · '+c.job.split(',')[0]:''}</div></div>
+        </div>
+        <div class="tags">
+          ${c.qty?`<span class="tag t-bottles">${c.qty} bottles</span>`:''}
+          ${total?`<span class="tag t-money">৳${total.toLocaleString()}</span>`:''}
+          ${fuTag}
+          ${c.ref?`<span class="tag t-ref">via ${c.ref.split(' ')[0]}</span>`:''}
+        </div>
+        ${(c.personal||c.notes)?`<div class="card-note">${(c.personal||c.notes).substring(0,80)}${(c.personal||c.notes).length>80?'...':''}</div>`:''}
+        <div class="card-actions">
+          <button class="act-btn" onclick="event.stopPropagation();window.location.href='tel:${c.phone}'">📞 Call</button>
+          <button class="act-btn" onclick="event.stopPropagation();waMsg('${c.id}','${c.phone}','${getNameForMsg(c.name)}')">💬 WA</button>
+          ${renderDoneBtn(c)}
+        </div>
+      </div>`;
+    }).join('');
+  }
+  updateStats();
+}
+
+/* ── RENDER PROSPECTS ── */
+function renderProspects() {
+  checkAutoAdvance();
+  const q = document.getElementById('searchProspectInput') ? document.getElementById('searchProspectInput').value.toLowerCase() : '';
+  let list = customers.filter(c => {
+    const isPros = c.status === 'prospect';
+    const mq = !q || c.name.toLowerCase().includes(q) || c.phone.includes(q);
+    return isPros && mq;
+  });
+  const el = document.getElementById('prospectCards');
+  if(!el) return;
+  if (!list.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-title">কোনো Prospect নেই</div><p style="font-size:12px">নতুন Prospect যোগ করুন</p></div>`;
+  } else {
+    el.innerHTML = list.map((c,i) => {
+      const st = fuStatus(c.followup);
+      const days = daysUntil(c.followup);
+      let fuTag = '';
+      if(st==='urgent') fuTag = `<span class="tag t-urgent">⚠ Follow-up বাকি</span>`;
+      else if(st==='soon') fuTag = `<span class="tag t-warn">${days}d-এ follow-up</span>`;
+      return `<div class="customer-card ${st==='urgent'?'urgent':st==='soon'?'soon':''}" onclick="showDetail('${c.id}')">
+        <div class="card-header">
+          <div class="avatar av-${i%5}" style="background:#0d2a3d; color:#5ab4ff">${initials(c.name)}</div>
+          <div><div class="card-name">${c.name}</div><div class="card-sub">Prospect${c.job?' · '+c.job.split(',')[0]:''}</div></div>
+        </div>
+        <div class="tags">
+          ${c.qty?`<span class="tag t-bottles">${c.qty} bottles (সম্ভাবনা)</span>`:''}
+          ${fuTag}
+          ${c.ref?`<span class="tag t-ref">via ${c.ref.split(' ')[0]}</span>`:''}
+        </div>
+        ${(c.personal||c.notes)?`<div class="card-note">${(c.personal||c.notes).substring(0,80)}${(c.personal||c.notes).length>80?'...':''}</div>`:''}
+        <div class="card-actions">
+          <button class="act-btn" onclick="event.stopPropagation();window.location.href='tel:${c.phone}'">📞 Call</button>
+          <button class="act-btn" onclick="event.stopPropagation();waMsg('${c.id}','${c.phone}','${getNameForMsg(c.name)}')">💬 WA</button>
+          ${renderDoneBtn(c)}
+        </div>
+      </div>`;
+    }).join('');
+  }
+}
+
+function updateStats() {
+  document.getElementById('statTotal').textContent = customers.filter(c=>c.status!=='prospect' && c.status!=='birddog').length;
+  if(document.getElementById('statProspects')) document.getElementById('statProspects').textContent = customers.filter(c=>c.status==='prospect').length;
+  if(document.getElementById('statBirddogs')) document.getElementById('statBirddogs').textContent = customers.filter(c=>c.status==='birddog').length;
+  document.getElementById('statFu').textContent = customers.filter(c=>fuStatus(c.followup)!=='ok').length;
+  document.getElementById('statBottles').textContent = customers.filter(c=>c.status!=='prospect' && c.status!=='birddog').reduce((s,c)=>s+(parseInt(c.qty)||0),0).toLocaleString();
+}
+
+/* ── RENDER BIRDDOGS ── */
+function renderBirddogs() {
+  checkAutoAdvance();
+  const q = document.getElementById('searchBirddogInput') ? document.getElementById('searchBirddogInput').value.toLowerCase() : '';
+  let list = customers.filter(c => {
+    const isBird = c.status === 'birddog';
+    const mq = !q || c.name.toLowerCase().includes(q) || c.phone.includes(q);
+    return isBird && mq;
+  });
+  const el = document.getElementById('birddogCards');
+  if(!el) return;
+  if (!list.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🦅</div><div class="empty-title">কোনো Birddog নেই</div><p style="font-size:12px">নতুন Birddog যোগ করুন</p></div>`;
+  } else {
+    el.innerHTML = list.map((c,i) => {
+      const st = fuStatus(c.followup);
+      const days = daysUntil(c.followup);
+      let fuTag = '';
+      if(st==='urgent') fuTag = `<span class="tag t-urgent">⚠ Follow-up বাকি</span>`;
+      else if(st==='soon') fuTag = `<span class="tag t-warn">${days}d-এ follow-up</span>`;
+      
+      const lastContactText = c.date ? `শেষ contact: ${fmtDate(c.date)}` : '';
+      
+      return `<div class="customer-card ${st==='urgent'?'urgent':st==='soon'?'soon':''}" onclick="showDetail('${c.id}')">
+        <div class="card-header">
+          <div class="avatar av-${i%5}" style="background:#2a1a3d; color:#c084fc">${initials(c.name)}</div>
+          <div><div class="card-name">${c.name}</div><div class="card-sub">${c.job || 'Birddog'}</div></div>
+        </div>
+        <div class="tags">
+          ${c.qty?`<span class="tag t-bottles">${c.qty} Referrals</span>`:''}
+          ${c.price?`<span class="tag t-money">৳${c.price} দিয়েছি</span>`:''}
+          ${fuTag}
+        </div>
+        ${lastContactText?`<div class="card-note" style="color:var(--accent);">${lastContactText}</div>`:''}
+        ${c.notes?`<div class="card-note">${c.notes.substring(0,80)}${c.notes.length>80?'...':''}</div>`:''}
+        <div class="card-actions">
+          <button class="act-btn" onclick="event.stopPropagation();window.location.href='tel:${c.phone}'">📞 Call</button>
+          <button class="act-btn" onclick="event.stopPropagation();waMsg('${c.id}','${c.phone}','${getNameForMsg(c.name)}')">💬 WA</button>
+          ${renderDoneBtn(c)}
+        </div>
+      </div>`;
+    }).join('');
+  }
+  updateStats();
+}
+
+/* ── RENDER FOLLOWUP ── */
+let currentFuFilter = 'all';
+function setFuFilter(filter) {
+  currentFuFilter = filter;
+  ['all','customer','prospect','birddog'].forEach(f => {
+    const el = document.getElementById('fuFilter-'+f);
+    if(el) {
+      if(f===filter) el.classList.add('active');
+      else el.classList.remove('active');
+    }
+  });
+  renderFollowup();
+}
+
+function renderFollowup() {
+  checkAutoAdvance();
+  let urgent = customers.filter(c=>fuStatus(c.followup)==='urgent');
+  let soon = customers.filter(c=>fuStatus(c.followup)==='soon');
+  
+  if (currentFuFilter !== 'all') {
+    urgent = urgent.filter(c => c.status === currentFuFilter);
+    soon = soon.filter(c => c.status === currentFuFilter);
+  }
+  
+  urgent.sort((a,b)=>new Date(a.followup)-new Date(b.followup));
+  soon.sort((a,b)=>new Date(a.followup)-new Date(b.followup));
+  
+  const list = [...urgent,...soon];
+  document.getElementById('fuHeading').textContent = `Follow-up লিস্ট (${list.length})`;
+  if(!list.length){
+    document.getElementById('followupList').innerHTML = `<div class="empty-state"><div class="empty-icon">🎉</div><div class="empty-title">সব follow-up done!</div></div>`;
+    return;
+  }
+  document.getElementById('followupList').innerHTML = list.map(c=>{
+    const st = fuStatus(c.followup);
+    const days = daysUntil(c.followup);
+    const dayTxt = days<0?`${Math.abs(days)} দিন আগে ছিল`:days===0?'আজকেই!':days===1?'আগামীকাল':`${days} দিন বাকি`;
+    return `<div class="fu-item ${st}">
+      <div class="badge badge-${st==='urgent'?'red':'yellow'}"></div>
+      <div class="fu-info">
+        <div class="fu-name">${c.name}</div>
+        <div class="fu-detail">${typeLabel[c.type]} · ${c.notes?c.notes.substring(0,50):'—'}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-family:'DM Mono',monospace;font-size:12px;color:${st==='urgent'?'var(--danger)':'var(--warning)'};margin-bottom:6px">${dayTxt}</div>
+        <div class="fu-btns">
+          <button class="act-btn" onclick="waMsg('${c.id}','${c.phone}','${getNameForMsg(c.name)}')">WhatsApp</button>
+          ${renderDoneBtn(c, 'Done ✓')}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ── RENDER MONTHLY ── */
+function renderMonthly() {
+  if(!customers.length){
+    document.getElementById('monthlyList').innerHTML=`<div class="empty-state"><div class="empty-icon">📱</div><div class="empty-title">কোনো customer নেই</div></div>`;
+    return;
+  }
+  document.getElementById('monthlyList').innerHTML = customers.map(c=>{
+    const msg = encodeURIComponent(`আস-সালামু আলাইকুম ${getNameForMsg(c.name)}! আশা করি ভালো আছেন। আমাদের নতুন design এসেছে — দেখতে চাইলে জানাবেন 🍶`);
+    return `<div class="fu-item">
+      <div class="badge badge-green"></div>
+      <div class="fu-info"><div class="fu-name">${c.name}</div><div class="fu-detail">${typeLabel[c.type]} · ${c.phone}</div></div>
+      <button class="act-btn" style="padding:7px 12px;white-space:nowrap" onclick="waMsg('${c.id}','${c.phone}','${getNameForMsg(c.name)}','${msg}')">Message পাঠাও ↗</button>
+    </div>`;
+  }).join('');
+}
+
+/* ── NAV ── */
+function showView(name, btn) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(name==='followup') renderFollowup();
+  if(name==='monthly') renderMonthly();
+  if(name==='prospects') renderProspects();
+  if(name==='birddogs') renderBirddogs();
+  if(name==='customers') renderCustomers();
+}
+
+/* ── MODALS ── */
+function openAddModal(statusType = 'customer') {
+  editingId = null;
+  document.getElementById('modalTitle').textContent = statusType === 'prospect' ? 'নতুন Prospect যোগ করো' : 'নতুন Customer যোগ করো';
+  document.getElementById('saveBtn').textContent = 'সংরক্ষণ করো';
+  ['name','phone','qty','price','date','followup','ref','job','personal','notes'].forEach(f=>{
+    const el=document.getElementById('f-'+f); if(el) el.value='';
+  });
+  document.getElementById('f-type').value='corporate';
+  document.getElementById('f-status').value = statusType;
+  document.getElementById('modal').classList.add('open');
+}
+
+function openEditModal(id) {
+  const c = customers.find(x=>x.id===id);
+  if(!c) return;
+  editingId = id;
+  document.getElementById('modalTitle').textContent = c.status === 'prospect' ? 'Prospect Edit করো' : 'Customer Edit করো';
+  document.getElementById('saveBtn').textContent = 'Update করো';
+  document.getElementById('f-status').value=c.status||'customer';
+  document.getElementById('f-name').value=c.name||'';
+  document.getElementById('f-phone').value=c.phone||'';
+  document.getElementById('f-type').value=c.type||'corporate';
+  document.getElementById('f-qty').value=c.qty||'';
+  document.getElementById('f-price').value=c.price||'';
+  document.getElementById('f-date').value=c.date||'';
+  document.getElementById('f-followup').value=c.followup||'';
+  document.getElementById('f-ref').value=c.ref||'';
+  document.getElementById('f-job').value=c.job||'';
+  document.getElementById('f-personal').value=c.personal||'';
+  document.getElementById('f-notes').value=c.notes||'';
+  document.getElementById('detailModal').classList.remove('open');
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('open'); editingId=null; }
+
+function saveCustomer() {
+  const name = document.getElementById('f-name').value.trim();
+  const phone = document.getElementById('f-phone').value.trim();
+  if(!name||!phone){ alert('নাম এবং নম্বর দিতে হবে'); return; }
+  saveStateToHistory();
+  const data = {
+    name, phone,
+    status: document.getElementById('f-status').value,
+    type: document.getElementById('f-type').value,
+    qty: parseInt(document.getElementById('f-qty').value)||0,
+    price: parseInt(document.getElementById('f-price').value)||0,
+    date: document.getElementById('f-date').value,
+    followup: document.getElementById('f-followup').value,
+    ref: document.getElementById('f-ref').value.trim(),
+    job: document.getElementById('f-job').value.trim(),
+    personal: document.getElementById('f-personal').value.trim(),
+    notes: document.getElementById('f-notes').value.trim(),
+  };
+  if(editingId){
+    const idx=customers.findIndex(c=>c.id===editingId);
+    if(idx>=0) customers[idx]={...customers[idx],...data};
+  } else {
+    data.id=Date.now().toString();
+    data.createdAt=new Date().toISOString().split('T')[0];
+    customers.unshift(data);
+  }
+  save();
+  closeModal();
+  renderCustomers();
+  if (typeof renderProspects === 'function') renderProspects();
+  showToast('✓ ডেটা সংরক্ষণ হয়েছে', 'success');
+}
+
+function openAddBirddogModal() {
+  editingBirddogId = null;
+  document.getElementById('birddogModalTitle').textContent = 'নতুন Birddog';
+  document.getElementById('saveBirddogBtn').textContent = 'সংরক্ষণ করো';
+  ['name','phone','job','qty','price','date','followup','notes'].forEach(f=>{
+    const el=document.getElementById('b-'+f); if(el) el.value='';
+  });
+  document.getElementById('birddogModal').classList.add('open');
+}
+
+function openEditBirddogModal(id) {
+  const c = customers.find(x=>x.id===id);
+  if(!c) return;
+  editingBirddogId = id;
+  document.getElementById('birddogModalTitle').textContent = 'Birddog Edit করো';
+  document.getElementById('saveBirddogBtn').textContent = 'Update করো';
+  document.getElementById('b-name').value=c.name||'';
+  document.getElementById('b-phone').value=c.phone||'';
+  document.getElementById('b-job').value=c.job||'';
+  document.getElementById('b-qty').value=c.qty||'';
+  document.getElementById('b-price').value=c.price||'';
+  document.getElementById('b-date').value=c.date||'';
+  document.getElementById('b-followup').value=c.followup||'';
+  document.getElementById('b-notes').value=c.notes||'';
+  document.getElementById('detailModal').classList.remove('open');
+  document.getElementById('birddogModal').classList.add('open');
+}
+
+function closeBirddogModal() { document.getElementById('birddogModal').classList.remove('open'); editingBirddogId=null; }
+
+function saveBirddog() {
+  const name = document.getElementById('b-name').value.trim();
+  const phone = document.getElementById('b-phone').value.trim();
+  if(!name||!phone){ alert('নাম এবং নম্বর দিতে হবে'); return; }
+  saveStateToHistory();
+  const data = {
+    name, phone,
+    status: 'birddog',
+    job: document.getElementById('b-job').value.trim(),
+    qty: parseInt(document.getElementById('b-qty').value)||0,
+    price: parseInt(document.getElementById('b-price').value)||0,
+    date: document.getElementById('b-date').value,
+    followup: document.getElementById('b-followup').value,
+    notes: document.getElementById('b-notes').value.trim(),
+    type: 'birddog'
+  };
+  if(editingBirddogId){
+    const idx=customers.findIndex(c=>c.id===editingBirddogId);
+    if(idx>=0) customers[idx]={...customers[idx],...data};
+  } else {
+    data.id=Date.now().toString();
+    data.createdAt=new Date().toISOString().split('T')[0];
+    customers.unshift(data);
+  }
+  save();
+  closeBirddogModal();
+  renderBirddogs();
+  showToast('✓ Birddog সংরক্ষণ হয়েছে', 'success');
+}
+
+function showDetail(id) {
+  const c = customers.find(x=>x.id===id);
+  if(!c) return;
+  const total=(c.qty||0)*(c.price||0);
+  const days=daysUntil(c.followup);
+  const dayTxt = days===null?'—':days<0?`${Math.abs(days)} দিন আগে ছিল`:days===0?'আজকেই!':days===1?'আগামীকাল':`${days} দিন বাকি`;
+  const st=fuStatus(c.followup);
+  
+  if (c.status === 'birddog') {
+    document.getElementById('detailContent').innerHTML=`
+      <div class="modal-title">${c.name}</div>
+      <div class="detail-section">
+        <div class="detail-label">যোগাযোগ</div>
+        <div class="detail-row"><span class="detail-key">নম্বর</span><span class="detail-val">${c.phone}</span></div>
+        <div class="detail-row"><span class="detail-key">Role/ধরণ</span><span class="detail-val">${c.job||'—'}</span></div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-label">Referral তথ্য</div>
+        <div class="detail-row"><span class="detail-key">Refer করেছে</span><span class="detail-val">${c.qty||0} টি</span></div>
+        <div class="detail-row"><span class="detail-key">মোট দিয়েছি</span><span class="detail-val" style="color:var(--accent)">৳${(c.price||0).toLocaleString()}</span></div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-label">Follow-up</div>
+        <div class="detail-row"><span class="detail-key">শেষ Contact</span><span class="detail-val">${fmtDate(c.date)}</span></div>
+        <div class="detail-row"><span class="detail-key">পরের Contact</span><span class="detail-val">${fmtDate(c.followup)}</span></div>
+        <div class="detail-row"><span class="detail-key">অবস্থা</span><span class="detail-val" style="color:${st==='urgent'?'var(--danger)':st==='soon'?'var(--warning)':'var(--success)'}">${dayTxt}</span></div>
+      </div>
+      ${c.messageHistory && c.messageHistory.length ? `
+      <div class="detail-section">
+        <div class="detail-label" style="cursor:pointer; user-select:none; display:flex; align-items:center; justify-content:space-between;" onclick="const el=document.getElementById('histList'); el.style.display=el.style.display==='none'?'block':'none'; this.lastElementChild.textContent=el.style.display==='none'?'▼':'▲';">
+          <span>Message History (দেখতে ক্লিক করুন)</span>
+          <span style="font-size:12px">▼</span>
+        </div>
+        <div id="histList" style="display:none; margin-top:8px;">
+          ${c.messageHistory.slice().reverse().map(d => `<div class="detail-row"><span class="detail-key">পাঠানো হয়েছে</span><span class="detail-val">${fmtDate(d)} - ${new Date(d).toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'})}</span></div>`).join('')}
+        </div>
+      </div>
+      ` : ''}
+      ${c.notes?`<div class="detail-section"><div class="detail-label">নোট</div><p style="font-size:13px;color:var(--text);line-height:1.7">${c.notes}</p></div>`:''}
+    `;
+    document.getElementById('detailEditBtn').onclick=()=>openEditBirddogModal(id);
+  } else {
+    document.getElementById('detailContent').innerHTML=`
+      <div class="modal-title">${c.name}</div>
+      <div class="detail-section">
+        <div class="detail-label">যোগাযোগ</div>
+        <div class="detail-row"><span class="detail-key">নম্বর</span><span class="detail-val">${c.phone}</span></div>
+        <div class="detail-row"><span class="detail-key">কাজ/এলাকা</span><span class="detail-val">${c.job||'—'}</span></div>
+        <div class="detail-row"><span class="detail-key">Referral</span><span class="detail-val">${c.ref||'—'}</span></div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-label">Order তথ্য</div>
+        <div class="detail-row"><span class="detail-key">ধরন</span><span class="detail-val">${typeLabel[c.type]}</span></div>
+        <div class="detail-row"><span class="detail-key">পরিমাণ</span><span class="detail-val">${c.qty||0} bottle</span></div>
+        <div class="detail-row"><span class="detail-key">দাম</span><span class="detail-val">৳${c.price||0}/piece</span></div>
+        <div class="detail-row"><span class="detail-key">মোট মূল্য</span><span class="detail-val" style="color:var(--accent)">৳${total.toLocaleString()}</span></div>
+        <div class="detail-row"><span class="detail-key">Delivery</span><span class="detail-val">${fmtDate(c.date)}</span></div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-label">Follow-up</div>
+        <div class="detail-row"><span class="detail-key">তারিখ</span><span class="detail-val">${fmtDate(c.followup)}</span></div>
+        <div class="detail-row"><span class="detail-key">অবস্থা</span><span class="detail-val" style="color:${st==='urgent'?'var(--danger)':st==='soon'?'var(--warning)':'var(--success)'}">${dayTxt}</span></div>
+      </div>
+      ${c.messageHistory && c.messageHistory.length ? `
+      <div class="detail-section">
+        <div class="detail-label" style="cursor:pointer; user-select:none; display:flex; align-items:center; justify-content:space-between;" onclick="const el=document.getElementById('histList'); el.style.display=el.style.display==='none'?'block':'none'; this.lastElementChild.textContent=el.style.display==='none'?'▼':'▲';">
+          <span>Message History (দেখতে ক্লিক করুন)</span>
+          <span style="font-size:12px">▼</span>
+        </div>
+        <div id="histList" style="display:none; margin-top:8px;">
+          ${c.messageHistory.slice().reverse().map(d => `<div class="detail-row"><span class="detail-key">পাঠানো হয়েছে</span><span class="detail-val">${fmtDate(d)} - ${new Date(d).toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'})}</span></div>`).join('')}
+        </div>
+      </div>
+      ` : ''}
+      ${c.personal?`<div class="detail-section"><div class="detail-label">ব্যক্তিগত নোট</div><p style="font-size:13px;color:var(--text);line-height:1.7">${c.personal}</p></div>`:''}
+      ${c.notes?`<div class="detail-section"><div class="detail-label">Order নোট</div><p style="font-size:13px;color:var(--text);line-height:1.7">${c.notes}</p></div>`:''}
+    `;
+    document.getElementById('detailEditBtn').onclick=()=>openEditModal(id);
+  }
+  document.getElementById('detailDeleteBtn').onclick=()=>{
+    if(confirm(`"${c.name}" কে মুছে ফেলবে?`)){
+      saveStateToHistory();
+      customers=customers.filter(x=>x.id!==id);
+      save(); renderCustomers();
+      document.getElementById('detailModal').classList.remove('open');
+      showToast('Customer মুছে গেছে', 'error');
+    }
+  };
+  document.getElementById('detailModal').classList.add('open');
+}
+
+let pendingFuId = null;
+
+function doneFu(id) {
+  pendingFuId = id;
+  const c=customers.find(x=>x.id===id);
+  if(!c) return;
+  
+  const d=new Date(); d.setMonth(d.getMonth()+1);
+  const nextMonth = d.toISOString().split('T')[0];
+  
+  const dateInput = document.getElementById('nextFuDate');
+  if(dateInput) dateInput.value = nextMonth;
+  
+  document.getElementById('nextFuModal').classList.add('open');
+}
+
+function setNextFuDays(days) {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  document.getElementById('nextFuDate').value = d.toISOString().split('T')[0];
+}
+
+function confirmNextFu() {
+  if (!pendingFuId) return;
+  const dateVal = document.getElementById('nextFuDate').value;
+  if (!dateVal) { alert('তারিখ দিতে হবে'); return; }
+  
+  const c = customers.find(x => x.id === pendingFuId);
+  if (c) {
+    saveStateToHistory();
+    c.followup = dateVal;
+    c.lastDoneDate = new Date().toISOString().split('T')[0];
+    c.doneClickedAt = Date.now();
+    save();
+    refreshAllViews();
+    showToast('✓ Follow-up তারিখ আপডেট হয়েছে', 'success');
+  }
+  document.getElementById('nextFuModal').classList.remove('open');
+  pendingFuId = null;
+}
+
+function waMsg(id, phone, firstName, customMsgEncoded) {
+  const c = customers.find(x => x.id === id);
+  if (c) {
+    saveStateToHistory();
+    if (!c.messageHistory) c.messageHistory = [];
+    c.messageHistory.push(new Date().toISOString());
+    const today = new Date().toISOString().split('T')[0];
+    c.followup = today;
+    c.lastWaSent = today;
+    c.waClickedAt = Date.now();
+    save();
+    if (typeof renderCustomers === 'function') renderCustomers();
+    if (typeof renderProspects === 'function') renderProspects();
+    if (typeof renderBirddogs === 'function') renderBirddogs();
+    if (typeof renderFollowup === 'function') renderFollowup();
+  }
+  let cleanPhone = phone.replace(/\D/g, '');
+  if (cleanPhone.startsWith('0')) cleanPhone = cleanPhone.substring(1);
+  if (!cleanPhone.startsWith('91')) cleanPhone = '91' + cleanPhone;
+  const msg = customMsgEncoded ? customMsgEncoded : encodeURIComponent(`Kemon achen ${firstName}`);
+  window.open(`https://wa.me/${cleanPhone}?text=${msg}`,'_blank');
+}
+
+/* ── LEAFLET MAP LOGIC ── */
+let map, marker;
+let selectedAddress = "";
+
+function openMapModal() {
+  document.getElementById('mapModal').classList.add('open');
+  if(!map) {
+    map = L.map('mapView').setView([23.8, 88.0], 7); // West Bengal roughly
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+    
+    // Add Search Box to Map
+    const geocoder = L.Control.geocoder({
+      defaultMarkGeocode: false,
+      placeholder: "ম্যাপে সার্চ করুন..."
+    }).on('markgeocode', function(e) {
+      const bbox = e.geocode.bbox;
+      const poly = L.polygon([
+        bbox.getSouthEast(),
+        bbox.getNorthEast(),
+        bbox.getNorthWest(),
+        bbox.getSouthWest()
+      ]);
+      map.fitBounds(poly.getBounds());
+      marker.setLatLng(e.geocode.center);
+      updateAddress(e.geocode.center);
+    }).addTo(map);
+    
+    marker = L.marker([23.8, 88.0], {draggable: true}).addTo(map);
+    
+    marker.on('dragend', function(e) {
+      updateAddress(marker.getLatLng());
+    });
+    
+    map.on('click', function(e) {
+      marker.setLatLng(e.latlng);
+      updateAddress(e.latlng);
+    });
+    
+    // Try to get user's live location
+    if(navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(pos => {
+        const latlng = [pos.coords.latitude, pos.coords.longitude];
+        map.setView(latlng, 13);
+        marker.setLatLng(latlng);
+        updateAddress({lat: latlng[0], lng: latlng[1]});
+      });
+    } else {
+      updateAddress({lat: 23.8, lng: 88.0});
+    }
+  } else {
+    setTimeout(() => map.invalidateSize(), 100);
+  }
+}
+
+function updateAddress(latlng) {
+  document.getElementById('mapAddress').innerText = "ঠিকানা খোঁজা হচ্ছে...";
+  fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latlng.lat}&lon=${latlng.lng}&format=json`)
+    .then(r => r.json())
+    .then(data => {
+      if(data && data.display_name) {
+        selectedAddress = data.display_name.replace(', India', '');
+        document.getElementById('mapAddress').innerText = selectedAddress;
+      } else {
+        selectedAddress = "Unknown Location";
+        document.getElementById('mapAddress').innerText = selectedAddress;
+      }
+    }).catch(() => {
+      selectedAddress = "Error getting address";
+      document.getElementById('mapAddress').innerText = selectedAddress;
+    });
+}
+
+function closeMapModal() {
+  document.getElementById('mapModal').classList.remove('open');
+}
+
+function confirmMapLocation() {
+  document.getElementById('f-job').value = selectedAddress;
+  closeMapModal();
+}
+
+load();
+renderCustomers();
+if (typeof renderBirddogs === 'function') renderBirddogs();
+</script>
+</body>
+</html>
