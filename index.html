@@ -1159,6 +1159,24 @@ function confirmMapLocation() {
 load();
 renderCustomers();
 if (typeof renderBirddogs === 'function') renderBirddogs();
+
+// Enter to move to next field
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    const active = document.activeElement;
+    if (active && (active.tagName === 'INPUT' || active.tagName === 'SELECT')) {
+      const modal = active.closest('.modal-overlay.open');
+      if (modal) {
+        e.preventDefault();
+        const focusable = Array.from(modal.querySelectorAll('input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button.btn:not([disabled])'));
+        const index = focusable.indexOf(active);
+        if (index > -1 && index < focusable.length - 1) {
+          focusable[index + 1].focus();
+        }
+      }
+    }
+  }
+});
 </script>
 </body>
 </html>
