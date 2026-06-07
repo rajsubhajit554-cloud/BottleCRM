@@ -192,6 +192,10 @@ body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-seri
           <option value="wedding">Wedding</option>
           <option value="birthday">Birthday</option>
           <option value="event">Event</option>
+          <option value="cafe">Cafe</option>
+          <option value="restaurant">Restaurant</option>
+          <option value="sweetshop">Sweet Shop</option>
+          <option value="grocery">Grocery Shop</option>
           <option value="other">Other</option>
         </select>
         <button class="btn" onclick="openAddModal('customer')">+ নতুন Customer</button>
@@ -280,6 +284,10 @@ body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-seri
           <option value="wedding">Wedding</option>
           <option value="birthday">Birthday</option>
           <option value="event">Event</option>
+          <option value="cafe">Cafe</option>
+          <option value="restaurant">Restaurant</option>
+          <option value="sweetshop">Sweet Shop</option>
+          <option value="grocery">Grocery Shop</option>
           <option value="other">Other</option>
         </select>
       </div>
@@ -360,7 +368,7 @@ const KEY = 'bottlecrm_v1';
 let customers = [];
 let editingId = null;
 let editingBirddogId = null;
-const typeLabel = { corporate:'Corporate', wedding:'Wedding', birthday:'Birthday', event:'Event', other:'Other', birddog:'Birddog' };
+const typeLabel = { corporate:'Corporate', wedding:'Wedding', birthday:'Birthday', event:'Event', cafe:'Cafe', restaurant:'Restaurant', sweetshop:'Sweet Shop', grocery:'Grocery Shop', other:'Other', birddog:'Birddog' };
 
 /* ── UNDO / REDO ── */
 let undoStack = [];
