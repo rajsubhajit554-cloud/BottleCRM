@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="bn">
 <head>
 <meta charset="UTF-8">
@@ -260,7 +260,7 @@ body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-seri
       <div class="form-group"><label class="form-label">নম্বর *</label><input class="form-input" id="b-phone" placeholder="01XXXXXXXXX"></div>
       <div class="form-group"><label class="form-label">Role / ধরন</label><input class="form-input" id="b-job" placeholder="সাপ্লাইয়ার"></div>
       <div class="form-group"><label class="form-label">Refer করেছে (কয়টা)</label><input class="form-input" type="number" id="b-qty" placeholder="2"></div>
-      <div class="form-group"><label class="form-label">মোট টাকা দিয়েছি (৳)</label><input class="form-input" type="number" id="b-price" placeholder="150"></div>
+      <div class="form-group"><label class="form-label">মোট রুপি দিয়েছি (₹)</label><input class="form-input" type="number" id="b-price" placeholder="150"></div>
       <div class="form-group"><label class="form-label">শেষ Contact</label><input class="form-input" type="date" id="b-date"></div>
       <div class="form-group"><label class="form-label">পরের Contact</label><input class="form-input" type="date" id="b-followup"></div>
       <div class="form-group form-full"><label class="form-label">নোট</label><textarea class="form-textarea" id="b-notes" placeholder="কোথায় কোথায় refer করেছে..."></textarea></div>
@@ -300,7 +300,7 @@ body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-seri
         </select>
       </div>
       <div class="form-group"><label class="form-label">কত Bottle</label><input class="form-input" type="number" id="f-qty" placeholder="200"></div>
-      <div class="form-group"><label class="form-label">দাম/piece (৳)</label><input class="form-input" type="number" id="f-price" placeholder="18"></div>
+      <div class="form-group"><label class="form-label">দাম/piece (₹)</label><input class="form-input" type="number" id="f-price" placeholder="18"></div>
       <div class="form-group"><label class="form-label">Delivery তারিখ</label><input class="form-input" type="date" id="f-date"></div>
       <div class="form-group"><label class="form-label">Follow-up তারিখ</label><input class="form-input" type="date" id="f-followup"></div>
       <div class="form-group"><label class="form-label">Referral source</label><input class="form-input" id="f-ref" placeholder="কে পাঠিয়েছে"></div>
@@ -610,7 +610,7 @@ function renderCustomers() {
         </div>
         <div class="tags">
           ${c.qty?`<span class="tag t-bottles">${c.qty} bottles</span>`:''}
-          ${total?`<span class="tag t-money">৳${total.toLocaleString()}</span>`:''}
+          ${total?`<span class="tag t-money">₹${total.toLocaleString()}</span>`:''}
           ${fuTag}
           ${c.ref?`<span class="tag t-ref">via ${c.ref.split(' ')[0]}</span>`:''}
         </div>
@@ -705,7 +705,7 @@ function renderBirddogs() {
         </div>
         <div class="tags">
           ${c.qty?`<span class="tag t-bottles">${c.qty} Referrals</span>`:''}
-          ${c.price?`<span class="tag t-money">৳${c.price} দিয়েছি</span>`:''}
+          ${c.price?`<span class="tag t-money">₹${c.price} দিয়েছি</span>`:''}
           ${fuTag}
         </div>
         ${lastContactText?`<div class="card-note" style="color:var(--accent);">${lastContactText}</div>`:''}
@@ -953,7 +953,7 @@ function showDetail(id) {
       <div class="detail-section">
         <div class="detail-label">Referral তথ্য</div>
         <div class="detail-row"><span class="detail-key">Refer করেছে</span><span class="detail-val">${c.qty||0} টি</span></div>
-        <div class="detail-row"><span class="detail-key">মোট দিয়েছি</span><span class="detail-val" style="color:var(--accent)">৳${(c.price||0).toLocaleString()}</span></div>
+        <div class="detail-row"><span class="detail-key">মোট দিয়েছি</span><span class="detail-val" style="color:var(--accent)">₹${(c.price||0).toLocaleString()}</span></div>
       </div>
       <div class="detail-section">
         <div class="detail-label">Follow-up</div>
@@ -988,8 +988,8 @@ function showDetail(id) {
         <div class="detail-label">Order তথ্য</div>
         <div class="detail-row"><span class="detail-key">ধরন</span><span class="detail-val">${typeLabel[c.type]}</span></div>
         <div class="detail-row"><span class="detail-key">পরিমাণ</span><span class="detail-val">${c.qty||0} bottle</span></div>
-        <div class="detail-row"><span class="detail-key">দাম</span><span class="detail-val">৳${c.price||0}/piece</span></div>
-        <div class="detail-row"><span class="detail-key">মোট মূল্য</span><span class="detail-val" style="color:var(--accent)">৳${total.toLocaleString()}</span></div>
+        <div class="detail-row"><span class="detail-key">দাম</span><span class="detail-val">₹${c.price||0}/piece</span></div>
+        <div class="detail-row"><span class="detail-key">মোট মূল্য</span><span class="detail-val" style="color:var(--accent)">₹${total.toLocaleString()}</span></div>
         <div class="detail-row"><span class="detail-key">Delivery</span><span class="detail-val">${fmtDate(c.date)}</span></div>
       </div>
       <div class="detail-section">
