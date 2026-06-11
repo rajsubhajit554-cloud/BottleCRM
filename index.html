@@ -35,9 +35,8 @@ body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-seri
 .stat-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0; text-align: center; white-space: nowrap; }
 
 /* SAVE/LOAD BUTTONS in topbar */
-.topbar-actions { display: flex; gap: 8px; flex-shrink: 0; overflow-x: auto; scrollbar-width: none; }
-.topbar-actions::-webkit-scrollbar { display: none; }
-.tb-btn { display: flex; align-items: center; gap: 6px; background: none; border: 1px solid var(--border2); color: var(--muted); border-radius: 8px; padding: 7px 13px; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+.topbar-actions { display: flex; gap: 4px; justify-content: space-between; align-items: center; width: 100%; overflow: hidden; }
+.tb-btn { display: flex; align-items: center; gap: 4px; background: none; border: 1px solid var(--border2); color: var(--muted); border-radius: 6px; padding: 5px 8px; font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
 .tb-btn:hover { color: var(--text); border-color: var(--accent); }
 .tb-btn.save-btn { border-color: #c8f54255; color: var(--accent); }
 .tb-btn.save-btn:hover { background: #c8f54215; }
@@ -154,19 +153,17 @@ body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-seri
 <div class="app">
 
   <!-- TOPBAR ACTIONS & LOGO -->
-  <div class="topbar-actions" style="padding: 10px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; align-items: center;">
+  <div class="topbar-actions" style="padding: 10px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100;">
     <div class="logo">
       <img src="favicon.png" alt="BottleCRM Logo" style="height: 24px; width: 24px; border-radius: 4px;">
       Bottle<span>CRM</span>
     </div>
-    <button class="tb-btn" id="btnUndo" onclick="undo()" title="Undo (Ctrl+Z)" style="opacity:0.3; cursor:default;">↩ Undo</button>
-    <button class="tb-btn" id="btnRedo" onclick="redo()" title="Redo (Ctrl+Y)" style="opacity:0.3; cursor:default;">↪ Redo</button>
-    <button class="tb-btn save-btn" onclick="exportData()" title="নির্দিষ্ট ফাইলে ডেটা সেভ করো">
-      💾 Save File
-    </button>
-    <button class="tb-btn" onclick="openFile()" title="ফাইল থেকে ডেটা লোড করো">
-      📂 Open File
-    </button>
+    <div style="display:flex; gap:4px;">
+      <button class="tb-btn" id="btnUndo" onclick="undo()" title="Undo (Ctrl+Z)" style="opacity:0.3; cursor:default;">↩</button>
+      <button class="tb-btn" id="btnRedo" onclick="redo()" title="Redo (Ctrl+Y)" style="opacity:0.3; cursor:default;">↪</button>
+      <button class="tb-btn save-btn" onclick="exportData()" title="নির্দিষ্ট ফাইলে ডেটা সেভ করো">💾 Save</button>
+      <button class="tb-btn" onclick="openFile()" title="ফাইল থেকে ডেটা লোড করো">📂 Open</button>
+    </div>
   </div>
 
   <!-- STATS BAR -->
