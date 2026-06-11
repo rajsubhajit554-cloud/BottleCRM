@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="bn">
 <head>
 <meta charset="UTF-8">
@@ -333,6 +333,17 @@ body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-seri
   </div>
 </div>
 
+<!-- HISAB / PAYMENT MODAL -->
+<div class="modal-overlay" id="hisabModal" style="z-index: 200;">
+  <div class="modal" style="max-height:90vh; overflow-y:auto;">
+    <div class="modal-title" id="hisabModalTitle" style="margin-bottom:15px; font-size:20px;">হিসাব / পেমেন্ট</div>
+    <div id="hisabContent"></div>
+    <div class="modal-actions" style="margin-top:20px;">
+      <button class="btn-ghost" onclick="closeHisabModal()" style="width:100%">বন্ধ করো</button>
+    </div>
+  </div>
+</div>
+
 <!-- NEXT FOLLOW-UP MODAL -->
 <div class="modal-overlay" id="nextFuModal" style="z-index: 250;">
   <div class="modal" style="width:100%; max-width:350px;">
@@ -600,6 +611,9 @@ function renderCustomers() {
       const st = fuStatus(c.followup);
       const total = (c.qty||0)*(c.price||0);
       const days = daysUntil(c.followup);
+      const totalPaid = (c.payments || []).reduce((s, p) => s + Number(p.amount), 0);
+      const discount = Number(c.discount) || 0;
+      const due = total - discount - totalPaid;
       let fuTag = '';
       if(st==='urgent') fuTag = `<span class="tag t-urgent">⚠ Follow-up বাকি</span>`;
       else if(st==='soon') fuTag = `<span class="tag t-warn">${days}d-এ follow-up</span>`;
@@ -611,6 +625,7 @@ function renderCustomers() {
         <div class="tags">
           ${c.qty?`<span class="tag t-bottles">${c.qty} bottles</span>`:''}
           ${total?`<span class="tag t-money">₹${total.toLocaleString()}</span>`:''}
+          ${due>0?`<span class="tag t-urgent">বকেয়া ₹${due.toLocaleString()}</span>`:''}
           ${fuTag}
           ${c.ref?`<span class="tag t-ref">via ${c.ref.split(' ')[0]}</span>`:''}
         </div>
@@ -991,6 +1006,7 @@ function showDetail(id) {
         <div class="detail-row"><span class="detail-key">দাম</span><span class="detail-val">₹${c.price||0}/piece</span></div>
         <div class="detail-row"><span class="detail-key">মোট মূল্য</span><span class="detail-val" style="color:var(--accent)">₹${total.toLocaleString()}</span></div>
         <div class="detail-row"><span class="detail-key">Delivery</span><span class="detail-val">${fmtDate(c.date)}</span></div>
+        <button class="btn" style="width:100%; margin-top:12px; background:#4CAF50; color:#fff; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="openHisabModal('${id}')">💰 পেমেন্ট / হিসাব</button>
       </div>
       <div class="detail-section">
         <div class="detail-label">Follow-up</div>
@@ -1170,6 +1186,138 @@ function closeMapModal() {
 function confirmMapLocation() {
   document.getElementById('f-job').value = selectedAddress;
   closeMapModal();
+}
+
+// --- HISAB / PAYMENT LOGIC ---
+function openHisabModal(id) {
+  const c = customers.find(x => x.id === id);
+  if (!c) return;
+  if (!c.payments) c.payments = [];
+  if (!c.discount) c.discount = 0;
+  
+  renderHisabContent(id);
+  document.getElementById('hisabModal').classList.add('open');
+}
+
+function closeHisabModal() {
+  document.getElementById('hisabModal').classList.remove('open');
+  renderCustomers(); 
+  const cId = document.getElementById('hisabContent').dataset.id;
+  if(cId) showDetail(cId); 
+}
+
+function renderHisabContent(id) {
+  const c = customers.find(x => x.id === id);
+  if (!c) return;
+  
+  const totalBill = (c.qty || 0) * (c.price || 0);
+  const totalPaid = (c.payments || []).reduce((sum, p) => sum + Number(p.amount), 0);
+  const discount = Number(c.discount) || 0;
+  const due = totalBill - discount - totalPaid;
+  
+  const html = `
+    <div style="background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:15px; margin-bottom:15px;">
+      <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+        <span style="color:var(--muted)">মোট বিল (Total):</span>
+        <span style="font-weight:bold; font-size:16px;">₹${totalBill.toLocaleString()}</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-bottom:8px; align-items:center;">
+        <span style="color:var(--muted)">ডিসকাউন্ট (Discount):</span>
+        <div style="display:flex; gap:5px; align-items:center;">
+          <input type="number" id="h-discount" value="${discount}" style="width:70px; padding:4px 8px; border:1px solid var(--border2); background:transparent; color:var(--text); border-radius:4px; text-align:right;">
+          <button class="btn-ghost" style="padding:4px 8px; font-size:12px; height:auto;" onclick="saveDiscount('${id}')">Save</button>
+        </div>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+        <span style="color:var(--muted)">জমা দেওয়া হয়েছে (Paid):</span>
+        <span style="color:var(--success); font-weight:bold; font-size:16px;">₹${totalPaid.toLocaleString()}</span>
+      </div>
+      <hr style="border:none; border-top:1px dashed var(--border2); margin:10px 0;">
+      <div style="display:flex; justify-content:space-between;">
+        <span style="color:var(--text); font-weight:bold;">বকেয়া (Due):</span>
+        <span style="color:${due>0?'var(--danger)':'var(--success)'}; font-weight:bold; font-size:18px;">₹${due.toLocaleString()}</span>
+      </div>
+    </div>
+    
+    <div style="margin-bottom:15px;">
+      <div style="font-weight:bold; margin-bottom:8px;">নতুন পেমেন্ট যোগ করুন</div>
+      <div style="display:flex; gap:8px; margin-bottom:8px;">
+        <input type="number" id="h-amount" placeholder="পরিমাণ (₹)" style="flex:1; padding:10px; border:1px solid var(--border2); background:transparent; color:var(--text); border-radius:6px;">
+        <input type="date" id="h-date" value="${new Date().toISOString().split('T')[0]}" style="flex:1; padding:10px; border:1px solid var(--border2); background:transparent; color:var(--text); border-radius:6px;">
+      </div>
+      <input type="text" id="h-note" placeholder="নোট (যেমন: ক্যাশ, বিকাশ)" style="width:100%; padding:10px; margin-bottom:10px; border:1px solid var(--border2); background:transparent; color:var(--text); border-radius:6px;">
+      <button class="btn" style="width:100%;" onclick="addPayment('${id}')">পেমেন্ট যোগ করুন</button>
+    </div>
+    
+    <div style="font-weight:bold; margin-bottom:8px;">পেমেন্ট হিস্ট্রি</div>
+    ${(!c.payments || c.payments.length === 0) ? '<div style="color:var(--muted); font-size:12px; text-align:center; padding:10px;">কোনো পেমেন্ট হিস্ট্রি নেই</div>' : ''}
+    <div style="max-height:200px; overflow-y:auto; border:1px solid var(--border); border-radius:6px; background:var(--bg);">
+      ${(c.payments || []).slice().reverse().map((p, i) => `
+        <div style="padding:10px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-weight:bold; color:var(--success)">+ ₹${Number(p.amount).toLocaleString()}</div>
+            <div style="font-size:11px; color:var(--muted)">${fmtDate(p.date)} ${p.note ? '• '+p.note : ''}</div>
+          </div>
+          <button class="btn-ghost" style="padding:4px; color:var(--danger);" onclick="deletePayment('${id}', ${c.payments.length - 1 - i})" title="মুছে ফেলুন">🗑️</button>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  const content = document.getElementById('hisabContent');
+  content.dataset.id = id;
+  content.innerHTML = html;
+}
+
+function saveDiscount(id) {
+  const c = customers.find(x => x.id === id);
+  if (!c) return;
+  const el = document.getElementById('h-discount');
+  const d = Number(el.value);
+  if (isNaN(d) || d < 0) {
+    showToast('সঠিক ডিসকাউন্ট দিন', 'error');
+    return;
+  }
+  saveStateToHistory();
+  c.discount = d;
+  save();
+  renderHisabContent(id);
+  showToast('ডিসকাউন্ট সেভ হয়েছে', 'success');
+}
+
+function addPayment(id) {
+  const c = customers.find(x => x.id === id);
+  if (!c) return;
+  const amount = Number(document.getElementById('h-amount').value);
+  const date = document.getElementById('h-date').value;
+  const note = document.getElementById('h-note').value.trim();
+  
+  if (!amount || amount <= 0) {
+    showToast('সঠিক টাকার পরিমাণ দিন', 'error');
+    return;
+  }
+  if (!date) {
+    showToast('তারিখ নির্বাচন করুন', 'error');
+    return;
+  }
+  
+  saveStateToHistory();
+  if(!c.payments) c.payments = [];
+  c.payments.push({ amount, date, note, timestamp: Date.now() });
+  save();
+  renderHisabContent(id);
+  showToast('পেমেন্ট যোগ হয়েছে', 'success');
+}
+
+function deletePayment(id, index) {
+  const c = customers.find(x => x.id === id);
+  if (!c) return;
+  if(confirm('এই পেমেন্টটি মুছে ফেলতে চান?')) {
+    saveStateToHistory();
+    c.payments.splice(index, 1);
+    save();
+    renderHisabContent(id);
+    showToast('পেমেন্ট মুছে ফেলা হয়েছে', 'success');
+  }
 }
 
 load();
