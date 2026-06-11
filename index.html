@@ -332,15 +332,7 @@ body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-seri
     </div>
   </div>
 </div>
-<!-- CLIENT PANEL MODAL -->
-<div class="modal-overlay" id="clientPanelModal" style="z-index: 150;">
-  <div class="modal" style="max-height:90vh; overflow-y:auto; padding:20px;">
-    <div id="clientPanelContent"></div>
-    <div class="modal-actions" style="margin-top:20px;">
-      <button class="btn-ghost" onclick="document.getElementById('clientPanelModal').classList.remove('open')" style="width:100%">বন্ধ করো</button>
-    </div>
-  </div>
-</div>
+
 <!-- HISAB / PAYMENT MODAL -->
 <div class="modal-overlay" id="hisabModal" style="z-index: 200;">
   <div class="modal" style="max-height:90vh; overflow-y:auto;">
@@ -611,67 +603,37 @@ function renderCustomers() {
     const mt = !ft || c.type === ft;
     return isCust && mq && mt;
   });
-  
-  // Dynamic Grouping by phone
-  let grouped = {};
-  list.forEach(c => {
-    if(!grouped[c.phone]) {
-      grouped[c.phone] = { phone: c.phone, name: c.name, job: c.job, ref: c.ref, type: c.type, id: c.id, orders: [] };
-    }
-    grouped[c.phone].orders.push(c);
-  });
-  let groupedList = Object.values(grouped);
-
   const el = document.getElementById('customerCards');
-  if (!groupedList.length) {
+  if (!list.length) {
     el.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">কোনো customer নেই</div><p style="font-size:12px">নতুন customer যোগ করো বা আগের file load করো</p></div>`;
   } else {
-    el.innerHTML = groupedList.map((client,i) => {
-      let totalBottles = 0;
-      let totalBill = 0;
-      let totalPaid = 0;
-      let discount = 0;
-      let earliestFollowup = null;
-      let activeOrder = null;
-      
-      client.orders.forEach(o => {
-        totalBottles += (Number(o.qty) || 0);
-        totalBill += (Number(o.qty) || 0) * (Number(o.price) || 0);
-        totalPaid += (o.payments || []).reduce((s, p) => s + Number(p.amount), 0);
-        discount += Number(o.discount) || 0;
-        
-        if (o.followup) {
-           if (!earliestFollowup || new Date(o.followup) < new Date(earliestFollowup)) {
-             earliestFollowup = o.followup;
-             activeOrder = o;
-           }
-        }
-      });
-      
-      const due = totalBill - discount - totalPaid;
-      const st = fuStatus(earliestFollowup);
-      const days = daysUntil(earliestFollowup);
-      
+    el.innerHTML = list.map((c,i) => {
+      const st = fuStatus(c.followup);
+      const total = (c.qty||0)*(c.price||0);
+      const days = daysUntil(c.followup);
+      const totalPaid = (c.payments || []).reduce((s, p) => s + Number(p.amount), 0);
+      const discount = Number(c.discount) || 0;
+      const due = total - discount - totalPaid;
       let fuTag = '';
       if(st==='urgent') fuTag = `<span class="tag t-urgent">⚠ Follow-up বাকি</span>`;
       else if(st==='soon') fuTag = `<span class="tag t-warn">${days}d-এ follow-up</span>`;
-      
-      return `<div class="customer-card ${st==='urgent'?'urgent':st==='soon'?'soon':''}" onclick="showClientPanel('${client.phone}')">
+      return `<div class="customer-card ${st==='urgent'?'urgent':st==='soon'?'soon':''}" onclick="showDetail('${c.id}')">
         <div class="card-header">
-          <div class="avatar av-${i%5}">${initials(client.name)}</div>
-          <div><div class="card-name">${client.name}</div><div class="card-sub">${client.job?client.job.split(',')[0]:'কাস্টমার'}</div></div>
+          <div class="avatar av-${i%5}">${initials(c.name)}</div>
+          <div><div class="card-name">${c.name}</div><div class="card-sub">${typeLabel[c.type]||c.type}${c.job?' · '+c.job.split(',')[0]:''}</div></div>
         </div>
         <div class="tags">
-          ${totalBottles?`<span class="tag t-bottles">${totalBottles} bottles</span>`:''}
-          ${totalBill?`<span class="tag t-money">₹${totalBill.toLocaleString()}</span>`:''}
+          ${c.qty?`<span class="tag t-bottles">${c.qty} bottles</span>`:''}
+          ${total?`<span class="tag t-money">₹${total.toLocaleString()}</span>`:''}
           ${due>0?`<span class="tag t-urgent">বকেয়া ₹${due.toLocaleString()}</span>`:''}
           ${fuTag}
-          ${client.ref?`<span class="tag t-ref">via ${client.ref.split(' ')[0]}</span>`:''}
+          ${c.ref?`<span class="tag t-ref">via ${c.ref.split(' ')[0]}</span>`:''}
         </div>
+        ${(c.personal||c.notes)?`<div class="card-note">${(c.personal||c.notes).substring(0,80)}${(c.personal||c.notes).length>80?'...':''}</div>`:''}
         <div class="card-actions">
-          <button class="act-btn" onclick="event.stopPropagation();window.location.href='tel:${client.phone}'">📞 Call</button>
-          <button class="act-btn" onclick="event.stopPropagation();waMsg('${client.id}','${client.phone}','${getNameForMsg(client.name)}')">💬 WA</button>
-          ${activeOrder ? renderDoneBtn(activeOrder) : ''}
+          <button class="act-btn" onclick="event.stopPropagation();window.location.href='tel:${c.phone}'">📞 Call</button>
+          <button class="act-btn" onclick="event.stopPropagation();waMsg('${c.id}','${c.phone}','${getNameForMsg(c.name)}')">💬 WA</button>
+          ${renderDoneBtn(c)}
         </div>
       </div>`;
     }).join('');
@@ -721,12 +683,11 @@ function renderProspects() {
 }
 
 function updateStats() {
-  const custs = customers.filter(c=>c.status!=='prospect' && c.status!=='birddog');
-  document.getElementById('statTotal').textContent = new Set(custs.map(c=>c.phone)).size;
+  document.getElementById('statTotal').textContent = customers.filter(c=>c.status!=='prospect' && c.status!=='birddog').length;
   if(document.getElementById('statProspects')) document.getElementById('statProspects').textContent = customers.filter(c=>c.status==='prospect').length;
   if(document.getElementById('statBirddogs')) document.getElementById('statBirddogs').textContent = customers.filter(c=>c.status==='birddog').length;
-  document.getElementById('statFu').textContent = customers.filter(c=>fuStatus(c.followup)!=='ok' && c.status!=='prospect' && c.status!=='birddog').length;
-  document.getElementById('statBottles').textContent = custs.reduce((s,c)=>s+(parseInt(c.qty)||0),0).toLocaleString();
+  document.getElementById('statFu').textContent = customers.filter(c=>fuStatus(c.followup)!=='ok').length;
+  document.getElementById('statBottles').textContent = customers.filter(c=>c.status!=='prospect' && c.status!=='birddog').reduce((s,c)=>s+(parseInt(c.qty)||0),0).toLocaleString();
 }
 
 /* ── RENDER BIRDDOGS ── */
@@ -859,18 +820,6 @@ function showView(name, btn) {
 }
 
 /* ── MODALS ── */
-function openNewOrderForClient(phone) {
-  const c = customers.find(x => x.phone === phone);
-  if(!c) return;
-  openAddModal();
-  document.getElementById('f-name').value = c.name || '';
-  document.getElementById('f-phone').value = c.phone || '';
-  document.getElementById('f-job').value = c.job || '';
-  document.getElementById('f-ref').value = c.ref || '';
-  document.getElementById('f-personal').value = c.personal || '';
-  document.getElementById('clientPanelModal').classList.remove('open');
-}
-
 function openAddModal(statusType = 'customer') {
   editingId = null;
   document.getElementById('modalTitle').textContent = statusType === 'prospect' ? 'নতুন Prospect যোগ করো' : 'নতুন Customer যোগ করো';
@@ -1000,62 +949,6 @@ function saveBirddog() {
   showToast('✓ Birddog সংরক্ষণ হয়েছে', 'success');
 }
 
-function showClientPanel(phone) {
-  const clientOrders = customers.filter(c => c.phone === phone && c.status !== 'prospect' && c.status !== 'birddog');
-  if(!clientOrders.length) return;
-  
-  const c = clientOrders[0]; // primary info
-  
-  let totalBottles = 0;
-  let totalBill = 0;
-  let totalPaid = 0;
-  let discount = 0;
-  
-  clientOrders.forEach(o => {
-    totalBottles += (Number(o.qty) || 0);
-    totalBill += (Number(o.qty) || 0) * (Number(o.price) || 0);
-    totalPaid += (o.payments || []).reduce((s, p) => s + Number(p.amount), 0);
-    discount += Number(o.discount) || 0;
-  });
-  
-  const due = totalBill - discount - totalPaid;
-  
-  document.getElementById('clientPanelContent').innerHTML=`
-    <div class="modal-title">${c.name}</div>
-    <div class="detail-section">
-      <div class="detail-label">Client তথ্য</div>
-      <div class="detail-row"><span class="detail-key">নম্বর</span><span class="detail-val">${c.phone}</span></div>
-      <div class="detail-row"><span class="detail-key">ঠিকানা/কাজ</span><span class="detail-val">${c.job||'—'}</span></div>
-      <div class="detail-row"><span class="detail-key">মোট বোতল</span><span class="detail-val">${totalBottles}</span></div>
-      <div class="detail-row"><span class="detail-key">মোট বিল</span><span class="detail-val">₹${totalBill.toLocaleString()}</span></div>
-      <div class="detail-row"><span class="detail-key">বকেয়া</span><span class="detail-val" style="color:${due>0?'var(--danger)':'var(--success)'}; font-weight:bold;">₹${due.toLocaleString()}</span></div>
-      <button class="btn" style="width:100%; margin-top:12px; background:#4CAF50; color:#fff;" onclick="openHisabModal('${c.id}')">💰 পেমেন্ট / হিসাব</button>
-    </div>
-    
-    <div class="detail-section">
-      <div class="detail-label" style="display:flex; justify-content:space-between; align-items:center;">
-        <span>অর্ডার হিস্ট্রি</span>
-        <button class="btn-ghost" style="padding:4px 8px; font-size:12px; height:auto; color:var(--accent); border:1px solid var(--accent);" onclick="openNewOrderForClient('${c.phone}')">+ নতুন অর্ডার</button>
-      </div>
-      <div style="margin-top:10px;">
-        ${clientOrders.slice().sort((a,b)=>new Date(b.date)-new Date(a.date)).map(o => `
-          <div style="border:1px solid var(--border); border-radius:6px; padding:10px; margin-bottom:8px; background:var(--surface); cursor:pointer;" onclick="showDetail('${o.id}')">
-            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-              <span style="font-weight:bold; color:var(--accent)">${fmtDate(o.date)}</span>
-              <span style="font-weight:bold;">₹${((Number(o.qty)||0)*(Number(o.price)||0)).toLocaleString()}</span>
-            </div>
-            <div style="font-size:12px; color:var(--muted); display:flex; justify-content:space-between;">
-              <span>${o.qty||0} bottles (${typeLabel[o.type]||o.type})</span>
-              <span><span style="color:${fuStatus(o.followup)==='urgent'?'var(--danger)':''}">Follow-up: ${fmtDate(o.followup)}</span></span>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `;
-  document.getElementById('clientPanelModal').classList.add('open');
-}
-
 function showDetail(id) {
   const c = customers.find(x=>x.id===id);
   if(!c) return;
@@ -1113,6 +1006,7 @@ function showDetail(id) {
         <div class="detail-row"><span class="detail-key">দাম</span><span class="detail-val">₹${c.price||0}/piece</span></div>
         <div class="detail-row"><span class="detail-key">মোট মূল্য</span><span class="detail-val" style="color:var(--accent)">₹${total.toLocaleString()}</span></div>
         <div class="detail-row"><span class="detail-key">Delivery</span><span class="detail-val">${fmtDate(c.date)}</span></div>
+        <button class="btn" style="width:100%; margin-top:12px; background:#4CAF50; color:#fff; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="openHisabModal('${id}')">💰 পেমেন্ট / হিসাব</button>
       </div>
       <div class="detail-section">
         <div class="detail-label">Follow-up</div>
@@ -1136,20 +1030,12 @@ function showDetail(id) {
     document.getElementById('detailEditBtn').onclick=()=>openEditModal(id);
   }
   document.getElementById('detailDeleteBtn').onclick=()=>{
-    if(confirm(`এই রেকর্ডটি মুছে ফেলবে?`)){
+    if(confirm(`"${c.name}" কে মুছে ফেলবে?`)){
       saveStateToHistory();
-      const phoneToReopen = c.phone;
       customers=customers.filter(x=>x.id!==id);
       save(); renderCustomers();
       document.getElementById('detailModal').classList.remove('open');
-      showToast('মুছে ফেলা হয়েছে', 'error');
-      
-      const remaining = customers.filter(x => x.phone === phoneToReopen && x.status !== 'prospect' && x.status !== 'birddog');
-      if (remaining.length > 0) {
-        showClientPanel(phoneToReopen);
-      } else {
-        document.getElementById('clientPanelModal').classList.remove('open');
-      }
+      showToast('Customer মুছে গেছে', 'error');
     }
   };
   document.getElementById('detailModal').classList.add('open');
@@ -1317,23 +1203,16 @@ function closeHisabModal() {
   document.getElementById('hisabModal').classList.remove('open');
   renderCustomers(); 
   const cId = document.getElementById('hisabContent').dataset.id;
-  if(cId) {
-    const c = customers.find(x => x.id === cId);
-    if(c) showClientPanel(c.phone);
-  }
+  if(cId) showDetail(cId); 
 }
 
 function renderHisabContent(id) {
-  const primaryRecord = customers.find(x => x.id === id);
-  if (!primaryRecord) return;
-  const clientOrders = customers.filter(x => x.phone === primaryRecord.phone && x.status !== 'prospect' && x.status !== 'birddog');
+  const c = customers.find(x => x.id === id);
+  if (!c) return;
   
-  let totalBill = 0;
-  clientOrders.forEach(o => {
-    totalBill += (Number(o.qty) || 0) * (Number(o.price) || 0);
-  });
-  const totalPaid = (primaryRecord.payments || []).reduce((sum, p) => sum + Number(p.amount), 0);
-  const discount = Number(primaryRecord.discount) || 0;
+  const totalBill = (c.qty || 0) * (c.price || 0);
+  const totalPaid = (c.payments || []).reduce((sum, p) => sum + Number(p.amount), 0);
+  const discount = Number(c.discount) || 0;
   const due = totalBill - discount - totalPaid;
   
   const html = `
@@ -1371,15 +1250,15 @@ function renderHisabContent(id) {
     </div>
     
     <div style="font-weight:bold; margin-bottom:8px;">পেমেন্ট হিস্ট্রি</div>
-    ${(!primaryRecord.payments || primaryRecord.payments.length === 0) ? '<div style="color:var(--muted); font-size:12px; text-align:center; padding:10px;">কোনো পেমেন্ট হিস্ট্রি নেই</div>' : ''}
+    ${(!c.payments || c.payments.length === 0) ? '<div style="color:var(--muted); font-size:12px; text-align:center; padding:10px;">কোনো পেমেন্ট হিস্ট্রি নেই</div>' : ''}
     <div style="max-height:200px; overflow-y:auto; border:1px solid var(--border); border-radius:6px; background:var(--bg);">
-      ${(primaryRecord.payments || []).slice().reverse().map((p, i) => `
+      ${(c.payments || []).slice().reverse().map((p, i) => `
         <div style="padding:10px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
           <div>
             <div style="font-weight:bold; color:var(--success)">+ ₹${Number(p.amount).toLocaleString()}</div>
             <div style="font-size:11px; color:var(--muted)">${fmtDate(p.date)} ${p.note ? '• '+p.note : ''}</div>
           </div>
-          <button class="btn-ghost" style="padding:4px; color:var(--danger);" onclick="deletePayment('${id}', ${primaryRecord.payments.length - 1 - i})" title="মুছে ফেলুন">🗑️</button>
+          <button class="btn-ghost" style="padding:4px; color:var(--danger);" onclick="deletePayment('${id}', ${c.payments.length - 1 - i})" title="মুছে ফেলুন">🗑️</button>
         </div>
       `).join('')}
     </div>
