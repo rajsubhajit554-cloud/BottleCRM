@@ -149,6 +149,292 @@ body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-seri
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* ── HISAB MODAL CUSTOM RESPONSIVE LAYOUT ── */
+.hisab-summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 15px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+.hisab-client-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.hisab-avatar {
+  background: #1e3a5f;
+  color: #5ab4ff;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  font-size: 18px;
+}
+.hisab-client-name {
+  font-weight: bold;
+  font-size: 18px;
+  color: var(--text);
+}
+.hisab-client-due {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 2px;
+}
+.hisab-badge-container {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.hisab-status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: bold;
+  border: 1px solid;
+}
+.hisab-status-badge.bill { border-color: #2196F3; color: #2196F3; }
+.hisab-status-badge.paid { border-color: var(--success); color: var(--success); }
+.hisab-status-badge.due { border-color: var(--danger); color: var(--danger); }
+
+.hisab-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: nowrap;
+}
+.hisab-box {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  background: var(--surface);
+}
+.hisab-box-title {
+  color: var(--text);
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+.hisab-form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+.hisab-input {
+  flex: 1;
+  min-width: 100px;
+  padding: 10px;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  border-radius: 4px;
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  outline: none;
+}
+.hisab-input:focus {
+  border-color: var(--accent);
+}
+.btn-add-due {
+  background: #f44336;
+  color: #fff;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  flex: 1;
+  min-width: 60px;
+}
+.btn-add-due:hover {
+  background: #d32f2f;
+}
+.btn-add-payment {
+  background: #4CAF50;
+  color: #fff;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  flex: 1;
+  min-width: 60px;
+}
+.btn-add-payment:hover {
+  background: #388E3C;
+}
+.hisab-history-section-title-container {
+  display: flex;
+  gap: 20px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 15px;
+}
+.hisab-history-section-title {
+  font-weight: bold;
+  padding-bottom: 8px;
+  font-size: 14px;
+}
+.hisab-history-section-title-container.due {
+  color: #f44336;
+}
+.hisab-history-section-title-container.due .hisab-history-section-title {
+  border-bottom: 2px solid #f44336;
+}
+.hisab-history-section-title-container.payment {
+  color: #4CAF50;
+}
+.hisab-history-section-title-container.payment .hisab-history-section-title {
+  border-bottom: 2px solid #4CAF50;
+}
+.hisab-history-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+.hisab-history-header.due { color: #f44336; }
+.hisab-history-header.payment { color: #4CAF50; }
+
+.hisab-history-list {
+  max-height: 250px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+.hisab-history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  padding: 12px 0;
+}
+.hisab-history-date {
+  color: var(--text);
+  font-size: 14px;
+}
+.hisab-history-amount {
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  font-size: 15px;
+}
+.hisab-history-amount.due { color: #f44336; }
+.hisab-history-amount.payment { color: #4CAF50; }
+.hisab-history-amount button {
+  color: #f44336;
+  font-size: 14px;
+  padding: 4px;
+}
+.hisab-empty-history {
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+  padding: 20px;
+}
+
+@media (max-width: 600px) {
+  #hisabModal .modal {
+    padding: 12px !important;
+  }
+  #hisabModalTitle {
+    font-size: 16px !important;
+    margin-bottom: 10px !important;
+  }
+  .hisab-summary-header {
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    gap: 8px;
+  }
+  .hisab-avatar {
+    width: 35px;
+    height: 35px;
+    font-size: 14px;
+  }
+  .hisab-client-name {
+    font-size: 15px;
+  }
+  .hisab-client-due {
+    font-size: 11px;
+  }
+  .hisab-badge-container {
+    gap: 5px;
+    width: 100%;
+    justify-content: space-between;
+  }
+  .hisab-status-badge {
+    padding: 4px 6px;
+    font-size: 10px;
+    flex: 1;
+    text-align: center;
+    white-space: nowrap;
+  }
+  
+  .hisab-row {
+    gap: 8px;
+  }
+  .hisab-box {
+    padding: 10px;
+    border-radius: 6px;
+  }
+  .hisab-box-title {
+    font-size: 11px;
+    margin-bottom: 8px;
+    text-align: center;
+    font-weight: bold;
+  }
+  .hisab-form {
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 15px;
+  }
+  .hisab-input {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 8px !important;
+    font-size: 11px;
+  }
+  .btn-add-due, .btn-add-payment {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 8px !important;
+    font-size: 11px;
+  }
+  .hisab-history-section-title-container {
+    margin-bottom: 10px;
+  }
+  .hisab-history-section-title {
+    font-size: 11px;
+    padding-bottom: 4px;
+  }
+  .hisab-history-header {
+    font-size: 10px;
+    margin-bottom: 6px;
+  }
+  .hisab-history-item {
+    padding: 8px 0;
+    font-size: 11px;
+  }
+  .hisab-history-date {
+    font-size: 11px;
+  }
+  .hisab-history-amount {
+    font-size: 11px;
+    gap: 8px;
+  }
+  .hisab-history-amount button {
+    font-size: 11px;
+    padding: 2px;
+  }
+}
 </style>
 </head>
 <body>
@@ -1383,79 +1669,79 @@ function renderHisabContent(id) {
   const due = totalGross - discount - totalPaid;
   
   const html = `
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:15px; flex-wrap:wrap; gap:15px;">
-      <div style="display:flex; align-items:center; gap:10px;">
-        <div style="background:#1e3a5f; color:#5ab4ff; width:45px; height:45px; border-radius:50%; display:flex; justify-content:center; align-items:center; font-weight:bold; font-size:18px;">${initials(primaryRecord.name)}</div>
+    <div class="hisab-summary-header">
+      <div class="hisab-client-profile">
+        <div class="hisab-avatar">${initials(primaryRecord.name)}</div>
         <div>
-          <div style="font-weight:bold; font-size:18px; color:var(--text);">${primaryRecord.name}</div>
-          <div style="color:var(--muted); font-size:13px; margin-top:2px;">মোট বাকি: ₹${due.toLocaleString()}</div>
+          <div class="hisab-client-name">${primaryRecord.name}</div>
+          <div class="hisab-client-due">মোট বাকি: ₹${due.toLocaleString()}</div>
         </div>
       </div>
-      <div style="display:flex; gap:10px; flex-wrap:wrap;">
-        <div style="border:1px solid #2196F3; color:#2196F3; padding:6px 12px; border-radius:20px; font-size:13px; font-weight:bold;">মোট বিল: ₹${totalGross.toLocaleString()}</div>
-        <div style="border:1px solid var(--success); color:var(--success); padding:6px 12px; border-radius:20px; font-size:13px; font-weight:bold;">পেয়েছি: ₹${totalPaid.toLocaleString()}</div>
-        <div style="border:1px solid var(--danger); color:var(--danger); padding:6px 12px; border-radius:20px; font-size:13px; font-weight:bold;">পাওনা: ₹${due.toLocaleString()}</div>
+      <div class="hisab-badge-container">
+        <div class="hisab-status-badge bill">মোট বিল: ₹${totalGross.toLocaleString()}</div>
+        <div class="hisab-status-badge paid">পেয়েছি: ₹${totalPaid.toLocaleString()}</div>
+        <div class="hisab-status-badge due">পাওনা: ₹${due.toLocaleString()}</div>
       </div>
     </div>
     
-    <div style="display:flex; flex-wrap:wrap; gap:20px;">
+    <div class="hisab-row">
       <!-- Left Column: Manual Dues -->
-      <div style="flex:1; min-width:280px; border:1px solid var(--border); border-radius:8px; padding:20px; background:var(--surface);">
-        <div style="color:var(--text); font-size:14px; margin-bottom:12px;">নতুন বাকি যোগ করুন</div>
-        <div style="display:flex; gap:8px; margin-bottom:25px; flex-wrap:wrap;">
-          <input type="number" id="h-due-amount" placeholder="টাকার পরিমাণ" style="flex:1; min-width:100px; padding:10px; background:var(--bg); border:1px solid var(--border2); color:var(--text); border-radius:4px;">
-          <input type="date" id="h-due-date" value="${new Date().toISOString().split('T')[0]}" style="flex:1; min-width:110px; padding:10px; background:var(--bg); border:1px solid var(--border2); color:var(--text); border-radius:4px;">
-          <button class="btn" style="background:#f44336; color:#fff; padding:10px 15px; border:none; border-radius:4px; font-weight:bold; cursor:pointer; flex:1; min-width:60px;" onclick="addManualDue('${id}')">যোগ</button>
+      <div class="hisab-box card-due">
+        <div class="hisab-box-title">নতুন বাকি যোগ করুন</div>
+        <div class="hisab-form">
+          <input type="number" id="h-due-amount" placeholder="টাকার পরিমাণ" class="hisab-input input-amount">
+          <input type="date" id="h-due-date" value="${new Date().toISOString().split('T')[0]}" class="hisab-input input-date">
+          <button class="btn btn-add-due" onclick="addManualDue('${id}')">যোগ</button>
         </div>
         
-        <div style="display:flex; gap:20px; border-bottom:1px solid var(--border); margin-bottom:15px;">
-          <div style="color:#f44336; font-weight:bold; padding-bottom:8px; border-bottom:2px solid #f44336; font-size:14px;">বাকি ইতিহাস</div>
+        <div class="hisab-history-section-title-container due">
+          <div class="hisab-history-section-title">বাকি ইতিহাস</div>
         </div>
         
-        <div style="display:flex; justify-content:space-between; color:#f44336; font-size:12px; font-weight:bold; margin-bottom:12px;">
+        <div class="hisab-history-header due">
           <span>তারিখ</span>
           <span>টাকা</span>
         </div>
-        <div style="max-height:250px; overflow-y:auto; padding-right:5px;">
+        <div class="hisab-history-list">
           ${(primaryRecord.manualDues||[]).slice().reverse().map((d,i) => `
-            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding:12px 0;">
-              <div style="color:var(--text); font-size:14px;">${fmtDate(d.date)}</div>
-              <div style="color:#f44336; font-weight:bold; display:flex; align-items:center; gap:15px; font-size:15px;">
-                ₹${Number(d.amount).toLocaleString()}
-                <button class="btn-ghost" style="color:#f44336; font-size:14px; padding:4px;" onclick="deleteManualDue('${id}', ${primaryRecord.manualDues.length-1-i})">🗑️</button>
+            <div class="hisab-history-item">
+              <div class="hisab-history-date">${fmtDate(d.date)}</div>
+              <div class="hisab-history-amount due">
+                <span>₹${Number(d.amount).toLocaleString()}</span>
+                <button class="btn-ghost" onclick="deleteManualDue('${id}', ${primaryRecord.manualDues.length-1-i})">🗑️</button>
               </div>
             </div>
-          `).join('') || '<div style="color:var(--muted); font-size:13px; text-align:center; padding:20px;">কোনো বাকি ইতিহাস নেই</div>'}
+          `).join('') || '<div class="hisab-empty-history">কোনো বাকি ইতিহাস নেই</div>'}
         </div>
       </div>
 
       <!-- Right Column: Payments -->
-      <div style="flex:1; min-width:280px; border:1px solid var(--border); border-radius:8px; padding:20px; background:var(--surface);">
-        <div style="color:var(--text); font-size:14px; margin-bottom:12px;">নতুন payment দিন</div>
-        <div style="display:flex; gap:8px; margin-bottom:25px; flex-wrap:wrap;">
-          <input type="number" id="h-amount" placeholder="টাকার পরিমাণ" style="flex:1; min-width:100px; padding:10px; background:var(--bg); border:1px solid var(--border2); color:var(--text); border-radius:4px;">
-          <input type="date" id="h-date" value="${new Date().toISOString().split('T')[0]}" style="flex:1; min-width:110px; padding:10px; background:var(--bg); border:1px solid var(--border2); color:var(--text); border-radius:4px;">
-          <button class="btn" style="background:#4CAF50; color:#fff; padding:10px 15px; border:none; border-radius:4px; font-weight:bold; cursor:pointer; flex:1; min-width:60px;" onclick="addPayment('${id}')">যোগ</button>
+      <div class="hisab-box card-payment">
+        <div class="hisab-box-title">নতুন payment দিন</div>
+        <div class="hisab-form">
+          <input type="number" id="h-amount" placeholder="টাকার পরিমাণ" class="hisab-input input-amount">
+          <input type="date" id="h-date" value="${new Date().toISOString().split('T')[0]}" class="hisab-input input-date">
+          <button class="btn btn-add-payment" onclick="addPayment('${id}')">যোগ</button>
         </div>
         
-        <div style="display:flex; gap:20px; border-bottom:1px solid var(--border); margin-bottom:15px;">
-          <div style="color:#4CAF50; font-weight:bold; padding-bottom:8px; border-bottom:2px solid #4CAF50; font-size:14px;">PAYMENT ইতিহাস</div>
+        <div class="hisab-history-section-title-container payment">
+          <div class="hisab-history-section-title">PAYMENT ইতিহাস</div>
         </div>
         
-        <div style="display:flex; justify-content:space-between; color:#4CAF50; font-size:12px; font-weight:bold; margin-bottom:12px;">
+        <div class="hisab-history-header payment">
           <span>তারিখ</span>
           <span>টাকা</span>
         </div>
-        <div style="max-height:250px; overflow-y:auto; padding-right:5px;">
+        <div class="hisab-history-list">
           ${(primaryRecord.payments||[]).slice().reverse().map((p,i) => `
-            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding:12px 0;">
-              <div style="color:var(--text); font-size:14px;">${fmtDate(p.date)}</div>
-              <div style="color:#4CAF50; font-weight:bold; display:flex; align-items:center; gap:15px; font-size:15px;">
-                ₹${Number(p.amount).toLocaleString()}
-                <button class="btn-ghost" style="color:#f44336; font-size:14px; padding:4px;" onclick="deletePayment('${id}', ${primaryRecord.payments.length-1-i})">🗑️</button>
+            <div class="hisab-history-item">
+              <div class="hisab-history-date">${fmtDate(p.date)}</div>
+              <div class="hisab-history-amount payment">
+                <span>₹${Number(p.amount).toLocaleString()}</span>
+                <button class="btn-ghost" onclick="deletePayment('${id}', ${primaryRecord.payments.length-1-i})">🗑️</button>
               </div>
             </div>
-          `).join('') || '<div style="color:var(--muted); font-size:13px; text-align:center; padding:20px;">কোনো payment নেই</div>'}
+          `).join('') || '<div class="hisab-empty-history">কোনো payment নেই</div>'}
         </div>
       </div>
     </div>
