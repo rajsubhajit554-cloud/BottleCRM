@@ -589,7 +589,7 @@ body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-seri
       <div class="form-group"><label class="form-label">দাম/piece (₹)</label><input class="form-input" type="number" id="f-price" placeholder="18"></div>
       <div class="form-group"><label class="form-label">Delivery তারিখ</label><input class="form-input" type="date" id="f-date"></div>
       <div class="form-group"><label class="form-label">Follow-up তারিখ</label><input class="form-input" type="date" id="f-followup"></div>
-      <div class="form-group"><label class="form-label">Referral source</label><input class="form-input" id="f-ref" placeholder="কে পাঠিয়েছে"></div>
+      <div class="form-group"><label class="form-label">Referral source</label><input class="form-input" id="f-ref" list="birddogs-list" placeholder="কে পাঠিয়েছে"><datalist id="birddogs-list"></datalist></div>
       <div class="form-group form-full">
         <label class="form-label">কাজ / এলাকা</label>
         <div style="display:flex; gap:8px;">
@@ -1179,8 +1179,17 @@ function openNewOrderForClient(phone) {
   document.getElementById('f-ref').value = c.ref || '';
   document.getElementById('f-type').value = c.type || 'corporate';
 }
+function populateBirddogsDatalist() {
+  const birddogs = customers.filter(c => c.status === 'birddog');
+  const datalist = document.getElementById('birddogs-list');
+  if (datalist) {
+    datalist.innerHTML = birddogs.map(b => `<option value="${b.name}">`).join('');
+  }
+}
+
 function openAddModal(statusType = 'customer') {
   editingId = null;
+  populateBirddogsDatalist();
   document.getElementById('modalTitle').textContent = statusType === 'prospect' ? 'নতুন Prospect যোগ করো' : 'নতুন Customer যোগ করো';
   document.getElementById('saveBtn').textContent = 'সংরক্ষণ করো';
   ['name','phone','qty','price','date','followup','ref','job','personal','notes'].forEach(f=>{
@@ -1196,6 +1205,7 @@ function openEditModal(id) {
   const c = customers.find(x=>x.id===id);
   if(!c) return;
   editingId = id;
+  populateBirddogsDatalist();
   document.getElementById('modalTitle').textContent = c.status === 'prospect' ? 'Prospect Edit করো' : 'Customer Edit করো';
   document.getElementById('saveBtn').textContent = 'Update করো';
   document.getElementById('f-status').value=c.status||'customer';
