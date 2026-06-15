@@ -435,19 +435,6 @@ body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-seri
     padding: 2px;
   }
 }
-
-/* ── MAP MODAL ALIGNMENT ── */
-#mapModal.modal-overlay {
-  align-items: flex-start;
-  padding-top: 40px;
-}
-@media (max-width: 600px) {
-  #mapModal.modal-overlay {
-    padding-top: 10px;
-    padding-left: 10px;
-    padding-right: 10px;
-  }
-}
 </style>
 </head>
 <body>
@@ -700,7 +687,7 @@ body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-seri
 </div>
 
 <!-- MAP MODAL -->
-<div class="modal-overlay" id="mapModal" style="z-index:200;">
+<div class="modal-overlay" id="mapModal" style="z-index:400;">
   <div class="modal" style="width:100%; max-width:600px; padding:20px;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
       <div class="modal-title" style="margin:0;">ম্যাপ থেকে এলাকা বেছে নিন</div>
