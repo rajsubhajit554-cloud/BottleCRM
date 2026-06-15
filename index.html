@@ -1314,10 +1314,48 @@ function saveCustomer() {
   };
   if(editingId){
     const idx=customers.findIndex(c=>c.id===editingId);
-    if(idx>=0) customers[idx]={...customers[idx],...data};
+    if(idx>=0) {
+      // Sync Birddog referrals count on edit
+      const oldCust = customers[idx];
+      const oldRef = oldCust.ref || '';
+      const newRef = data.ref;
+      if (oldRef !== newRef) {
+        if (oldRef) {
+          const oldBd = customers.find(x => x.status === 'birddog' && x.name === oldRef);
+          if (oldBd && oldBd.referrals) {
+            oldBd.referrals = oldBd.referrals.filter(r => r.customerId !== editingId);
+          }
+        }
+        if (newRef) {
+          const newBd = customers.find(x => x.status === 'birddog' && x.name === newRef);
+          if (newBd) {
+            if (!newBd.referrals) newBd.referrals = [];
+            newBd.referrals.push({ qty: 1, date: data.date, timestamp: Date.now(), customerId: editingId });
+          }
+        }
+      } else if (oldRef && oldCust.date !== data.date) {
+        const bd = customers.find(x => x.status === 'birddog' && x.name === oldRef);
+        if (bd && bd.referrals) {
+          const refEntry = bd.referrals.find(r => r.customerId === editingId);
+          if (refEntry) refEntry.date = data.date;
+        }
+      }
+      
+      customers[idx]={...customers[idx],...data};
+    }
   } else {
     data.id=Date.now().toString();
     data.createdAt=new Date().toISOString().split('T')[0];
+    
+    // Sync Birddog referrals count on new client addition
+    if (data.ref) {
+      const bd = customers.find(x => x.status === 'birddog' && x.name === data.ref);
+      if (bd) {
+        if (!bd.referrals) bd.referrals = [];
+        bd.referrals.push({ qty: 1, date: data.date, timestamp: Date.now(), customerId: data.id });
+      }
+    }
+    
     customers.unshift(data);
   }
   save();
@@ -1554,6 +1592,15 @@ function showDetail(id) {
     if(confirm(`এই রেকর্ডটি মুছে ফেলবে?`)){
       saveStateToHistory();
       const phoneToReopen = c.phone;
+      
+      // Clean up Birddog referral count if exists
+      if (c.ref) {
+        const bd = customers.find(x => x.status === 'birddog' && x.name === c.ref);
+        if (bd && bd.referrals) {
+          bd.referrals = bd.referrals.filter(r => r.customerId !== id);
+        }
+      }
+      
       customers=customers.filter(x=>x.id!==id);
       save(); renderCustomers();
       document.getElementById('detailModal').classList.remove('open');
