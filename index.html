@@ -589,7 +589,13 @@ body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-seri
       <div class="form-group"><label class="form-label">দাম/piece (₹)</label><input class="form-input" type="number" id="f-price" placeholder="18"></div>
       <div class="form-group"><label class="form-label">Delivery তারিখ</label><input class="form-input" type="date" id="f-date"></div>
       <div class="form-group"><label class="form-label">Follow-up তারিখ</label><input class="form-input" type="date" id="f-followup"></div>
-      <div class="form-group"><label class="form-label">Referral source</label><input class="form-input" id="f-ref" list="birddogs-list" placeholder="কে পাঠিয়েছে"><datalist id="birddogs-list"></datalist></div>
+      <div class="form-group">
+        <label class="form-label">Referral source</label>
+        <select class="form-select" id="f-ref-select" onchange="handleRefSelectChange()">
+          <!-- Populated dynamically -->
+        </select>
+        <input class="form-input" id="f-ref" placeholder="অন্যান্য রেফারেল (টাইপ করুন)..." style="margin-top: 6px; display: none;">
+      </div>
       <div class="form-group form-full">
         <label class="form-label">কাজ / এলাকা</label>
         <div style="display:flex; gap:8px;">
@@ -1176,25 +1182,67 @@ function openNewOrderForClient(phone) {
   document.getElementById('f-name').value = c.name || '';
   document.getElementById('f-phone').value = c.phone || '';
   document.getElementById('f-job').value = c.job || '';
-  document.getElementById('f-ref').value = c.ref || '';
+  
+  // Set ref field value
+  const refVal = c.ref || '';
+  const select = document.getElementById('f-ref-select');
+  const input = document.getElementById('f-ref');
+  input.value = refVal;
+  
+  const isBirddog = customers.some(x => x.status === 'birddog' && x.name === refVal);
+  if (refVal === '') {
+    select.value = '';
+    input.style.display = 'none';
+  } else if (isBirddog) {
+    select.value = refVal;
+    input.style.display = 'none';
+  } else {
+    select.value = '__other__';
+    input.style.display = 'block';
+  }
+  
   document.getElementById('f-type').value = c.type || 'corporate';
 }
-function populateBirddogsDatalist() {
+
+function populateBirddogsDropdown() {
   const birddogs = customers.filter(c => c.status === 'birddog');
-  const datalist = document.getElementById('birddogs-list');
-  if (datalist) {
-    datalist.innerHTML = birddogs.map(b => `<option value="${b.name}">`).join('');
+  const select = document.getElementById('f-ref-select');
+  if (select) {
+    let optionsHtml = '<option value="">সরাসরি / কেউ না (None)</option>';
+    birddogs.forEach(b => {
+      optionsHtml += `<option value="${b.name}">${b.name}</option>`;
+    });
+    optionsHtml += '<option value="__other__">অন্যান্য (টাইপ করুন)...</option>';
+    select.innerHTML = optionsHtml;
+  }
+}
+
+function handleRefSelectChange() {
+  const select = document.getElementById('f-ref-select');
+  const input = document.getElementById('f-ref');
+  if (select.value === '__other__') {
+    input.style.display = 'block';
+    input.value = '';
+    input.focus();
+  } else {
+    input.style.display = 'none';
+    input.value = select.value;
   }
 }
 
 function openAddModal(statusType = 'customer') {
   editingId = null;
-  populateBirddogsDatalist();
+  populateBirddogsDropdown();
   document.getElementById('modalTitle').textContent = statusType === 'prospect' ? 'নতুন Prospect যোগ করো' : 'নতুন Customer যোগ করো';
   document.getElementById('saveBtn').textContent = 'সংরক্ষণ করো';
   ['name','phone','qty','price','date','followup','ref','job','personal','notes'].forEach(f=>{
     const el=document.getElementById('f-'+f); if(el) el.value='';
   });
+  
+  // Reset ref dropdown and custom input
+  document.getElementById('f-ref-select').value = '';
+  document.getElementById('f-ref').style.display = 'none';
+  
   document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
   document.getElementById('f-type').value='corporate';
   document.getElementById('f-status').value = statusType;
@@ -1205,7 +1253,11 @@ function openEditModal(id) {
   const c = customers.find(x=>x.id===id);
   if(!c) return;
   editingId = id;
-  populateBirddogsDatalist();
+  populateBirddogsDropdown();
+  
+  const select = document.getElementById('f-ref-select');
+  const input = document.getElementById('f-ref');
+  
   document.getElementById('modalTitle').textContent = c.status === 'prospect' ? 'Prospect Edit করো' : 'Customer Edit করো';
   document.getElementById('saveBtn').textContent = 'Update করো';
   document.getElementById('f-status').value=c.status||'customer';
@@ -1216,7 +1268,23 @@ function openEditModal(id) {
   document.getElementById('f-price').value=c.price||'';
   document.getElementById('f-date').value=c.date||'';
   document.getElementById('f-followup').value=c.followup||'';
-  document.getElementById('f-ref').value=c.ref||'';
+  
+  // Handle ref field value
+  const refVal = c.ref || '';
+  input.value = refVal;
+  
+  const isBirddog = customers.some(x => x.status === 'birddog' && x.name === refVal);
+  if (refVal === '') {
+    select.value = '';
+    input.style.display = 'none';
+  } else if (isBirddog) {
+    select.value = refVal;
+    input.style.display = 'none';
+  } else {
+    select.value = '__other__';
+    input.style.display = 'block';
+  }
+  
   document.getElementById('f-job').value=c.job||'';
   document.getElementById('f-personal').value=c.personal||'';
   document.getElementById('f-notes').value=c.notes||'';
