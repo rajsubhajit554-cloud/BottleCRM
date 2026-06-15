@@ -649,6 +649,17 @@ body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-seri
   </div>
 </div>
 
+<!-- BIRDDOG HISAB MODAL -->
+<div class="modal-overlay" id="birddogHisabModal" style="z-index: 200;">
+  <div class="modal" style="max-height:90vh; overflow-y:auto;">
+    <div class="modal-title" id="birddogHisabModalTitle" style="margin-bottom:15px; font-size:20px;">Birddog পেমেন্ট / হিসাব</div>
+    <div id="birddogHisabContent"></div>
+    <div class="modal-actions" style="margin-top:20px;">
+      <button class="btn-ghost" onclick="closeBirddogHisabModal()" style="width:100%">বন্ধ করো</button>
+    </div>
+  </div>
+</div>
+
 <!-- NEXT FOLLOW-UP MODAL -->
 <div class="modal-overlay" id="nextFuModal" style="z-index: 250;">
   <div class="modal" style="width:100%; max-width:350px;">
@@ -1048,6 +1059,8 @@ function renderBirddogs() {
       else if(st==='soon') fuTag = `<span class="tag t-warn">${days}d-এ follow-up</span>`;
       
       const lastContactText = c.date ? `শেষ contact: ${fmtDate(c.date)}` : '';
+      const totalRefs = c.referrals && c.referrals.length ? c.referrals.reduce((sum, r) => sum + Number(r.qty), 0) : (c.qty || 0);
+      const totalPaid = c.payments && c.payments.length ? c.payments.reduce((sum, p) => sum + Number(p.amount), 0) : (c.price || 0);
       
       return `<div class="customer-card ${st==='urgent'?'urgent':st==='soon'?'soon':''}" onclick="showDetail('${c.id}')">
         <div class="card-header">
@@ -1055,8 +1068,8 @@ function renderBirddogs() {
           <div><div class="card-name">${c.name}</div><div class="card-sub">${c.job || 'Birddog'}</div></div>
         </div>
         <div class="tags">
-          ${c.qty?`<span class="tag t-bottles">${c.qty} Referrals</span>`:''}
-          ${c.price?`<span class="tag t-money">₹${c.price} দিয়েছি</span>`:''}
+          ${totalRefs?`<span class="tag t-bottles">${totalRefs} Referrals</span>`:''}
+          ${totalPaid?`<span class="tag t-money">₹${totalPaid} দিয়েছি</span>`:''}
           ${fuTag}
         </div>
         ${lastContactText?`<div class="card-note" style="color:var(--accent);">${lastContactText}</div>`:''}
@@ -1383,6 +1396,9 @@ function showDetail(id) {
   const st=fuStatus(c.followup);
   
   if (c.status === 'birddog') {
+    const totalRefs = c.referrals && c.referrals.length ? c.referrals.reduce((sum, r) => sum + Number(r.qty), 0) : (c.qty || 0);
+    const totalPaid = c.payments && c.payments.length ? c.payments.reduce((sum, p) => sum + Number(p.amount), 0) : (c.price || 0);
+    
     document.getElementById('detailContent').innerHTML=`
       <div class="modal-title">${c.name}</div>
       <div class="detail-section">
@@ -1392,14 +1408,17 @@ function showDetail(id) {
       </div>
       <div class="detail-section">
         <div class="detail-label">Referral তথ্য</div>
-        <div class="detail-row"><span class="detail-key">Refer করেছে</span><span class="detail-val">${c.qty||0} টি</span></div>
-        <div class="detail-row"><span class="detail-key">মোট দিয়েছি</span><span class="detail-val" style="color:var(--accent)">₹${(c.price||0).toLocaleString()}</span></div>
+        <div class="detail-row"><span class="detail-key">Refer করেছে</span><span class="detail-val">${totalRefs} টি</span></div>
+        <div class="detail-row"><span class="detail-key">মোট দিয়েছি</span><span class="detail-val" style="color:var(--accent)">₹${totalPaid.toLocaleString()}</span></div>
       </div>
       <div class="detail-section">
         <div class="detail-label">Follow-up</div>
         <div class="detail-row"><span class="detail-key">শেষ Contact</span><span class="detail-val">${fmtDate(c.date)}</span></div>
         <div class="detail-row"><span class="detail-key">পরের Contact</span><span class="detail-val">${fmtDate(c.followup)}</span></div>
         <div class="detail-row"><span class="detail-key">অবস্থা</span><span class="detail-val" style="color:${st==='urgent'?'var(--danger)':st==='soon'?'var(--warning)':'var(--success)'}">${dayTxt}</span></div>
+      </div>
+      <div class="detail-section" style="margin-top:15px; margin-bottom:15px;">
+        <button class="btn" style="background:#c084fc; color:#2a1a3d; border:none; padding:10px 12px; font-size:12px; border-radius:4px; font-weight:bold; cursor:pointer; width:100%;" onclick="openBirddogHisabModal('${c.id}')">💰 পেমেন্ট / হিসাব</button>
       </div>
       ${c.messageHistory && c.messageHistory.length ? `
       <div class="detail-section">
@@ -1823,6 +1842,191 @@ function deletePayment(id, index) {
   }
 }
 
+// --- BIRDDOG HISAB / PAYMENT LOGIC ---
+function openBirddogHisabModal(id) {
+  const c = customers.find(x => x.id === id);
+  if (!c) return;
+  if (!c.payments) c.payments = [];
+  if (!c.referrals) c.referrals = [];
+  
+  // Set modal styling to wider size
+  const hisabModalInner = document.querySelector('#birddogHisabModal .modal');
+  if (hisabModalInner) {
+    hisabModalInner.style.maxWidth = '800px';
+    hisabModalInner.style.width = '95%';
+  }
+  
+  // Update Header Title
+  document.getElementById('birddogHisabModalTitle').innerHTML = `<span style="display:flex; align-items:center; justify-content:center; gap:10px; background:#c084fc; color:#2a1a3d; padding:10px; border-radius:8px;"><span>💰</span> Birddog পেমেন্ট / হিসাব</span>`;
+  
+  renderBirddogHisabContent(id);
+  document.getElementById('birddogHisabModal').classList.add('open');
+}
+
+function closeBirddogHisabModal() {
+  document.getElementById('birddogHisabModal').classList.remove('open');
+  renderBirddogs();
+  const cId = document.getElementById('birddogHisabContent').dataset.id;
+  if (cId) {
+    showDetail(cId); // Re-render detail modal to update totals
+  }
+}
+
+function renderBirddogHisabContent(id) {
+  const c = customers.find(x => x.id === id);
+  if (!c) return;
+  
+  const totalRefs = (c.referrals || []).reduce((sum, r) => sum + Number(r.qty), 0);
+  const totalPaid = (c.payments || []).reduce((sum, p) => sum + Number(p.amount), 0);
+  
+  const html = `
+    <div class="hisab-summary-header">
+      <div class="hisab-client-profile">
+        <div class="hisab-avatar" style="background:#2a1a3d; color:#c084fc;">${initials(c.name)}</div>
+        <div>
+          <div class="hisab-client-name">${c.name} (Birddog)</div>
+          <div class="hisab-client-due">মোট রেফারেল: ${totalRefs} টি · মোট পেইড: ₹${totalPaid.toLocaleString()}</div>
+        </div>
+      </div>
+      <div class="hisab-badge-container">
+        <div class="hisab-status-badge bill" style="border-color:#c084fc; color:#c084fc;">রেফার করেছে: ${totalRefs} টি</div>
+        <div class="hisab-status-badge paid">মোট দিয়েছি: ₹${totalPaid.toLocaleString()}</div>
+      </div>
+    </div>
+    
+    <div class="hisab-row">
+      <!-- Left Column: Referrals -->
+      <div class="hisab-box card-due" style="border-color:#c084fc55;">
+        <div class="hisab-box-title" style="color:#c084fc;">নতুন Referral যোগ করুন</div>
+        <div class="hisab-form">
+          <input type="number" id="bd-ref-qty" placeholder="রেফারেল সংখ্যা" class="hisab-input input-amount">
+          <input type="date" id="bd-ref-date" value="${new Date().toISOString().split('T')[0]}" class="hisab-input input-date">
+          <button class="btn" style="background:#c084fc; color:#2a1a3d; padding:10px 15px; border:none; border-radius:4px; font-weight:bold; cursor:pointer; flex:1; min-width:60px;" onclick="addBirddogReferral('${id}')">যোগ</button>
+        </div>
+        
+        <div class="hisab-history-section-title-container" style="color:#c084fc; border-bottom-color:#c084fc;">
+          <div class="hisab-history-section-title" style="border-bottom:2px solid #c084fc;">রেফারেল ইতিহাস</div>
+        </div>
+        
+        <div class="hisab-history-header" style="color:#c084fc;">
+          <span>তারিখ</span>
+          <span>সংখ্যা</span>
+        </div>
+        <div class="hisab-history-list">
+          ${(c.referrals||[]).slice().reverse().map((r,i) => `
+            <div class="hisab-history-item">
+              <div class="hisab-history-date">${fmtDate(r.date)}</div>
+              <div class="hisab-history-amount" style="color:#c084fc;">
+                <span>${r.qty} টি</span>
+                <button class="btn-ghost" onclick="deleteBirddogReferral('${id}', ${c.referrals.length-1-i})">🗑️</button>
+              </div>
+            </div>
+          `).join('') || '<div class="hisab-empty-history">কোনো রেফারেল ইতিহাস নেই</div>'}
+        </div>
+      </div>
+
+      <!-- Right Column: Payments -->
+      <div class="hisab-box card-payment">
+        <div class="hisab-box-title">নতুন payment দিন</div>
+        <div class="hisab-form">
+          <input type="number" id="bd-pay-amount" placeholder="টাকার পরিমাণ" class="hisab-input input-amount">
+          <input type="date" id="bd-pay-date" value="${new Date().toISOString().split('T')[0]}" class="hisab-input input-date">
+          <button class="btn btn-add-payment" onclick="addBirddogPayment('${id}')">যোগ</button>
+        </div>
+        
+        <div class="hisab-history-section-title-container payment">
+          <div class="hisab-history-section-title">PAYMENT ইতিহাস</div>
+        </div>
+        
+        <div class="hisab-history-header payment">
+          <span>তারিখ</span>
+          <span>টাকা</span>
+        </div>
+        <div class="hisab-history-list">
+          ${(c.payments||[]).slice().reverse().map((p,i) => `
+            <div class="hisab-history-item">
+              <div class="hisab-history-date">${fmtDate(p.date)}</div>
+              <div class="hisab-history-amount payment">
+                <span>₹${Number(p.amount).toLocaleString()}</span>
+                <button class="btn-ghost" onclick="deleteBirddogPayment('${id}', ${c.payments.length-1-i})">🗑️</button>
+              </div>
+            </div>
+          `).join('') || '<div class="hisab-empty-history">কোনো payment নেই</div>'}
+        </div>
+      </div>
+    </div>
+  `;
+  const content = document.getElementById('birddogHisabContent');
+  content.dataset.id = id;
+  content.innerHTML = html;
+}
+
+function addBirddogReferral(id) {
+  const c = customers.find(x => x.id === id);
+  if (!c) return;
+  const qty = Number(document.getElementById('bd-ref-qty').value);
+  const date = document.getElementById('bd-ref-date').value;
+  if (!qty || qty <= 0) {
+    showToast('সঠিক রেফারেল সংখ্যা দিন', 'error');
+    return;
+  }
+  if (!date) {
+    showToast('তারিখ নির্বাচন করুন', 'error');
+    return;
+  }
+  saveStateToHistory();
+  if(!c.referrals) c.referrals = [];
+  c.referrals.push({ qty, date, timestamp: Date.now() });
+  save();
+  renderBirddogHisabContent(id);
+  showToast('রেফারেল যোগ হয়েছে', 'success');
+}
+
+function deleteBirddogReferral(id, index) {
+  const c = customers.find(x => x.id === id);
+  if (!c) return;
+  if(confirm('এই রেফারেলটি মুছে ফেলতে চান?')) {
+    saveStateToHistory();
+    c.referrals.splice(index, 1);
+    save();
+    renderBirddogHisabContent(id);
+    showToast('রেফারেল মুছে ফেলা হয়েছে', 'success');
+  }
+}
+
+function addBirddogPayment(id) {
+  const c = customers.find(x => x.id === id);
+  if (!c) return;
+  const amount = Number(document.getElementById('bd-pay-amount').value);
+  const date = document.getElementById('bd-pay-date').value;
+  if (!amount || amount <= 0) {
+    showToast('সঠিক টাকার পরিমাণ দিন', 'error');
+    return;
+  }
+  if (!date) {
+    showToast('তারিখ নির্বাচন করুন', 'error');
+    return;
+  }
+  saveStateToHistory();
+  if(!c.payments) c.payments = [];
+  c.payments.push({ amount, date, timestamp: Date.now() });
+  save();
+  renderBirddogHisabContent(id);
+  showToast('পেমেন্ট যোগ হয়েছে', 'success');
+}
+
+function deleteBirddogPayment(id, index) {
+  const c = customers.find(x => x.id === id);
+  if (!c) return;
+  if(confirm('এই পেমেন্টটি মুছে ফেলতে চান?')) {
+    saveStateToHistory();
+    c.payments.splice(index, 1);
+    save();
+    renderBirddogHisabContent(id);
+    showToast('পেমেন্ট মুছে ফেলা হয়েছে', 'success');
+  }
+}
+
 load();
 renderCustomers();
 if (typeof renderBirddogs === 'function') renderBirddogs();
@@ -1850,6 +2054,8 @@ document.addEventListener('click', function(e) {
   if (e.target.classList.contains('modal-overlay')) {
     if (e.target.id === 'hisabModal') {
       closeHisabModal();
+    } else if (e.target.id === 'birddogHisabModal') {
+      closeBirddogHisabModal();
     } else {
       e.target.classList.remove('open');
     }
