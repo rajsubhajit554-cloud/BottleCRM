@@ -53,6 +53,12 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+  position: relative;
+}
 body {
   background: var(--bg-gradient);
   background-attachment: fixed;
@@ -62,7 +68,14 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-.app { display: flex; flex-direction: column; height: 100vh; }
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
 
 /* TOPBAR */
 .topbar {
@@ -249,8 +262,19 @@ body {
   box-shadow: 0 0 16px rgba(163, 230, 53, 0.1);
 }
 
-.main { flex: 1; overflow: hidden; }
-.view { display: none; height: 100%; overflow-y: auto; padding: 20px; flex-direction: column; gap: 16px; }
+.main { flex: 1; overflow: hidden; width: 100%; max-width: 100vw; }
+.view {
+  display: none;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
+}
 .view.active { display: flex; animation: fadeIn 0.25s ease; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -347,8 +371,9 @@ body {
 /* CARDS */
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
   gap: 14px;
+  width: 100%;
 }
 .customer-card {
   background: var(--surface-card);
@@ -787,6 +812,132 @@ body {
 }
 
 @media (max-width: 600px) {
+  /* TOPBAR ACTIONS & LOGO */
+  .topbar-actions {
+    padding: 8px 10px !important;
+    gap: 6px;
+  }
+  .logo {
+    font-size: 16px;
+    gap: 6px;
+    margin-right: 2px;
+  }
+  .logo img {
+    height: 24px !important;
+    width: 24px !important;
+  }
+  .tb-btn {
+    padding: 5px 8px;
+    font-size: 11px;
+    gap: 3px;
+    border-radius: 7px;
+  }
+
+  /* TOPBAR STATS */
+  .topbar {
+    padding: 6px 10px;
+  }
+  .stats-bar {
+    gap: 4px;
+  }
+  .stat {
+    padding: 5px 2px;
+    border-radius: 8px;
+  }
+  .stat-num {
+    font-size: 13px;
+  }
+  .stat-label {
+    font-size: 8px;
+    letter-spacing: 0;
+  }
+
+  /* NAV */
+  .nav {
+    padding: 6px 8px;
+    gap: 4px;
+  }
+  .nav-btn {
+    padding: 6px 11px;
+    font-size: 12px;
+  }
+
+  /* VIEWS & TOOLBAR */
+  .view {
+    padding: 12px 10px;
+    gap: 12px;
+  }
+  .toolbar {
+    gap: 8px;
+  }
+  .toolbar .search-box {
+    width: 100%;
+    flex: 1 1 100%;
+    min-width: 0;
+    padding: 9px 12px;
+    font-size: 12px;
+  }
+  .toolbar .filter-select {
+    width: 100%;
+    flex: 1 1 100%;
+    padding: 9px 12px;
+    font-size: 12px;
+  }
+  .toolbar .btn {
+    width: 100%;
+    padding: 10px 14px;
+    text-align: center;
+    justify-content: center;
+  }
+
+  /* CARDS GRID */
+  .cards-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px;
+  }
+  .customer-card {
+    padding: 14px;
+  }
+
+  /* FOLLOW UP LIST */
+  .fu-item {
+    padding: 12px 10px;
+    gap: 10px;
+  }
+  .fu-name {
+    font-size: 13px;
+  }
+  .fu-detail {
+    font-size: 11px;
+  }
+
+  /* MODALS */
+  .modal-overlay {
+    padding: 10px;
+  }
+  .modal {
+    padding: 16px 12px !important;
+    border-radius: 16px !important;
+    max-height: 92vh !important;
+    width: 100% !important;
+  }
+  .form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+  .form-input, .form-select, .form-textarea {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+  .modal-actions {
+    margin-top: 16px;
+    gap: 8px;
+  }
+  .modal-actions button {
+    flex: 1;
+  }
+
+  /* HISAB MODALS */
   #hisabModal .modal, #birddogHisabModal .modal {
     padding: 12px 8px !important;
   }
@@ -973,7 +1124,7 @@ body {
     <!-- FOLLOW-UP -->
     <div class="view" id="view-followup">
       <div class="section-head" id="fuHeading">Follow-up লিস্ট</div>
-      <div style="display:flex; gap:8px; margin:0 20px 15px 20px; overflow-x:auto; padding-bottom:5px;">
+      <div style="display:flex; gap:8px; margin:0 0 14px 0; overflow-x:auto; padding-bottom:5px; width:100%; -webkit-overflow-scrolling:touch;">
         <button class="filter-btn active" onclick="setFuFilter('all')" id="fuFilter-all">সবাই</button>
         <button class="filter-btn" onclick="setFuFilter('customer')" id="fuFilter-customer">Customers</button>
         <button class="filter-btn" onclick="setFuFilter('prospect')" id="fuFilter-prospect">Prospects</button>
@@ -1918,32 +2069,32 @@ function showClientHistory(phone) {
     const amount = (Number(o.qty)||0) * (Number(o.price)||0);
     const bigDate = o.date ? o.date.split('-').reverse().join('/') : '—';
     return `
-      <div style="background:var(--surface-card); border:1px solid var(--border); border-radius:12px; margin-bottom:12px; padding:16px; cursor:pointer; transition:all 0.2s ease; box-shadow:var(--shadow-card);" onmouseover="this.style.borderColor='rgba(163,230,53,0.35)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='none'" onclick="showDetail('${o.id}')">
-        <div style="display:flex; justify-content:space-between; margin-bottom:8px; color:var(--text); align-items:center;">
-          <div style="font-weight:700; font-size:17px; color:var(--accent); font-family:'DM Mono',monospace;">${bigDate}</div>
-          <div style="font-size:11px; font-weight:700; padding:4px 8px; border-radius:12px; background:${fuComplete?'rgba(52,211,153,0.1)':'rgba(251,191,36,0.1)'}; color:${fuComplete?'var(--success)':'var(--warning)'}; border:1px solid ${fuComplete?'rgba(52,211,153,0.3)':'rgba(251,191,36,0.3)'};">NEXT FOLLOW: ${fuComplete ? 'COMPLETE' : fuStatusText}</div>
+      <div style="background:var(--surface-card); border:1px solid var(--border); border-radius:12px; margin-bottom:12px; padding:14px; cursor:pointer; transition:all 0.2s ease; box-shadow:var(--shadow-card);" onmouseover="this.style.borderColor='rgba(163,230,53,0.35)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='none'" onclick="showDetail('${o.id}')">
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; color:var(--text); align-items:center; flex-wrap:wrap; gap:6px;">
+          <div style="font-weight:700; font-size:16px; color:var(--accent); font-family:'DM Mono',monospace;">${bigDate}</div>
+          <div style="font-size:10px; font-weight:700; padding:3px 8px; border-radius:12px; background:${fuComplete?'rgba(52,211,153,0.1)':'rgba(251,191,36,0.1)'}; color:${fuComplete?'var(--success)':'var(--warning)'}; border:1px solid ${fuComplete?'rgba(52,211,153,0.3)':'rgba(251,191,36,0.3)'};">NEXT FOLLOW: ${fuComplete ? 'COMPLETE' : fuStatusText}</div>
         </div>
-        <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text); font-weight:600; align-items:center;">
-          <div><span style="color:var(--muted); font-size:11px; font-weight:normal;">TOTAL:</span> ₹${amount.toLocaleString()}</div>
-          <div style="font-size:11px; color:var(--muted);">DELIVERY: <span style="color:var(--text-secondary); font-weight:bold;">${fmtDate(o.date).toUpperCase()}</span></div>
-          <div style="text-transform:uppercase; font-size:11px; padding:3px 8px; border-radius:6px; background:rgba(255,255,255,0.05); color:var(--text-secondary);">${typeLabel[o.type] || o.type}</div>
+        <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text); font-weight:600; align-items:center; flex-wrap:wrap; gap:6px;">
+          <div><span style="color:var(--muted); font-size:10px; font-weight:normal;">TOTAL:</span> ₹${amount.toLocaleString()}</div>
+          <div style="font-size:10px; color:var(--muted);">DELIVERY: <span style="color:var(--text-secondary); font-weight:bold;">${fmtDate(o.date).toUpperCase()}</span></div>
+          <div style="text-transform:uppercase; font-size:10px; padding:2px 6px; border-radius:6px; background:rgba(255,255,255,0.05); color:var(--text-secondary);">${typeLabel[o.type] || o.type}</div>
         </div>
       </div>
     `;
   }).join('');
 
   document.getElementById('clientHistoryContent').innerHTML = `
-    <div style="background:linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding:18px 20px; color:#fff; display:flex; justify-content:space-between; align-items:center; border-top-left-radius:var(--radius-xl); border-top-right-radius:var(--radius-xl);">
-      <div style="font-weight:800; font-size:19px; font-family:'Syne',sans-serif; text-transform:uppercase; letter-spacing:-0.3px;">${c.name}</div>
-      <div style="display:flex; align-items:center; gap:8px;">
-        <button class="btn" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:#fff; border:none; padding:8px 14px; font-size:12px; border-radius:8px; font-weight:700; cursor:pointer; box-shadow:0 2px 8px rgba(16,185,129,0.3);" onclick="openHisabModal('${c.id}')">💰 পেমেন্ট / হিসাব</button>
-        <button type="button" class="btn" style="background:rgba(255,255,255,0.2); color:#fff; border:none; padding:7px 12px; font-size:15px; border-radius:8px; font-weight:700; cursor:pointer; backdrop-filter:blur(4px);" onclick="document.getElementById('clientHistoryModal').classList.remove('open')" title="বন্ধ করুন">✕ বন্ধ</button>
+    <div style="background:linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding:14px 16px; color:#fff; display:flex; justify-content:space-between; align-items:center; border-top-left-radius:var(--radius-xl); border-top-right-radius:var(--radius-xl); flex-wrap:wrap; gap:10px;">
+      <div style="font-weight:800; font-size:17px; font-family:'Syne',sans-serif; text-transform:uppercase; letter-spacing:-0.3px;">${c.name}</div>
+      <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+        <button class="btn" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:#fff; border:none; padding:7px 12px; font-size:11px; border-radius:8px; font-weight:700; cursor:pointer; box-shadow:0 2px 8px rgba(16,185,129,0.3);" onclick="openHisabModal('${c.id}')">💰 পেমেন্ট / হিসাব</button>
+        <button type="button" class="btn" style="background:rgba(255,255,255,0.2); color:#fff; border:none; padding:6px 10px; font-size:13px; border-radius:8px; font-weight:700; cursor:pointer; backdrop-filter:blur(4px);" onclick="document.getElementById('clientHistoryModal').classList.remove('open')" title="বন্ধ করুন">✕ বন্ধ</button>
       </div>
     </div>
-    <div style="padding:20px;">
-      <div style="display:flex; justify-content:space-between; gap:10px; margin-bottom:18px;">
-        <button class="btn" style="background:linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color:#fff; border:none; padding:10px 18px; font-size:12px; border-radius:10px; font-weight:700; letter-spacing:0.5px; cursor:pointer; flex:1;" onclick="openNewOrderForClient('${phone}')">+ নতুন অর্ডার</button>
-        <button class="btn" style="background:rgba(244,63,94,0.15); border:1px solid rgba(244,63,94,0.35); color:#f43f5e; padding:10px 18px; font-size:12px; border-radius:10px; font-weight:700; letter-spacing:0.5px; cursor:pointer; flex:1;" onclick="showFollowUpHistory('${phone}')">FOLLOW UP HISTORY</button>
+    <div style="padding:14px;">
+      <div style="display:flex; justify-content:space-between; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
+        <button class="btn" style="background:linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color:#fff; border:none; padding:9px 12px; font-size:11px; border-radius:8px; font-weight:700; letter-spacing:0.5px; cursor:pointer; flex:1 1 120px;" onclick="openNewOrderForClient('${phone}')">+ নতুন অর্ডার</button>
+        <button class="btn" style="background:rgba(244,63,94,0.15); border:1px solid rgba(244,63,94,0.35); color:#f43f5e; padding:9px 12px; font-size:11px; border-radius:8px; font-weight:700; letter-spacing:0.5px; cursor:pointer; flex:1 1 120px;" onclick="showFollowUpHistory('${phone}')">FOLLOW UP HISTORY</button>
       </div>
       <div>
         ${historyHtml}
