@@ -310,7 +310,18 @@ body {
 @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
 /* ── TOOLBAR ── */
-.toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  position: sticky;
+  top: -18px;
+  z-index: 20;
+  background: var(--bg);
+  padding: 4px 0 8px 0;
+  margin-top: -4px;
+}
 .search-box {
   flex: 1;
   min-width: 180px;
@@ -1043,13 +1054,13 @@ body {
         <button type="button" class="filter-btn" onclick="setFuFilter('prospect')" id="fuFilter-prospect" style="min-width:90px; height:34px;">Prospects</button>
         <button type="button" class="filter-btn" onclick="setFuFilter('birddog')" id="fuFilter-birddog" style="min-width:80px; height:34px;">Birddogs</button>
       </div>
-      <div class="fu-list" id="followupList" style="flex:1; overflow-y:auto;"></div>
+      <div class="fu-list" id="followupList"></div>
     </div>
 
     <!-- MONTHLY PING -->
     <div class="view" id="view-monthly">
       <div class="section-head">এই মাসে message করো</div>
-      <p style="font-size:12px;color:var(--muted);margin-top:4px;margin-bottom:4px">Girard-এর system — প্রতি মাসে সব customer-দের একটা message। Sales pitch না, শুধু exist করার জন্য।</p>
+      <p style="font-size:12px;color:var(--muted);margin-top:4px;margin-bottom:4px;flex-shrink:0;">Girard-এর system — প্রতি মাসে সব customer-দের একটা message। Sales pitch না, শুধু exist করার জন্য।</p>
       <div class="fu-list" id="monthlyList"></div>
     </div>
 
