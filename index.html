@@ -1246,7 +1246,7 @@ let undoStack = [];
 let redoStack = [];
 
 function saveStateToHistory() {
-  if (undoStack.length >= 50) undoStack.shift();
+  if (undoStack.length >= 6) undoStack.shift();
   undoStack.push(JSON.stringify(customers));
   redoStack = [];
   updateUndoRedoUI();
@@ -1505,7 +1505,13 @@ function renderCustomers() {
       return `<div class="customer-card ${st==='urgent'?'urgent':st==='soon'?'soon':''}" onclick="showClientHistory('${client.phone}')">
         <div class="card-header">
           <div class="avatar av-${i%5}">${initials(client.name)}</div>
-          <div><div class="card-name">${client.name}</div><div class="card-sub">${client.company ? client.company + (client.job ? ' · ' + client.job.split(',')[0] : '') : (client.job ? client.job.split(',')[0] : 'কাস্টমার')}</div></div>
+          <div>
+            <div class="card-name" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+              <span>${client.name}</span>
+              <span style="font-size:11px; font-weight:600; color:var(--accent); background:rgba(163,230,53,0.1); padding:1px 7px; border-radius:10px; border:1px solid rgba(163,230,53,0.25);">${client.orders.length}টি অর্ডার</span>
+            </div>
+            <div class="card-sub">${client.company ? client.company + (client.job ? ' · ' + client.job.split(',')[0] : '') : (client.job ? client.job.split(',')[0] : 'কাস্টমার')}</div>
+          </div>
         </div>
         <div class="tags">
           ${totalBottles?`<span class="tag t-bottles">${totalBottles} bottles</span>`:''}
