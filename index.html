@@ -1019,6 +1019,8 @@ body {
     </div>
 
   </div>
+
+  <footer style="text-align:center; padding:5px 12px; font-size:11px; color:var(--muted); font-family:var(--font-mono); letter-spacing:0.5px; opacity:0.65; flex-shrink:0;">v0.1</footer>
 </div>
 
 <!-- BIRDDOG MODAL -->
@@ -1112,7 +1114,6 @@ body {
     <div id="detailContent"></div>
     <div class="modal-actions">
       <button class="btn-danger" id="detailDeleteBtn">মুছে ফেলো</button>
-      <button class="btn-ghost" onclick="document.getElementById('detailModal').classList.remove('open')">বন্ধ করো</button>
       <button class="btn" id="detailEditBtn">Edit করো</button>
     </div>
   </div>
@@ -1121,9 +1122,6 @@ body {
 <div class="modal-overlay" id="clientHistoryModal" style="z-index: 140;">
   <div class="modal" style="max-height:95vh; overflow-y:auto; padding:0;">
     <div id="clientHistoryContent"></div>
-    <div class="modal-actions" style="margin:20px;">
-      <button class="btn-ghost" onclick="document.getElementById('clientHistoryModal').classList.remove('open')" style="width:100%">বন্ধ করো</button>
-    </div>
   </div>
 </div>
 
@@ -1135,9 +1133,6 @@ body {
       <button type="button" class="btn" style="background:rgba(255,255,255,0.25); color:#fff; border:none; padding:4px 10px; font-size:16px; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="document.getElementById('followUpHistoryModal').classList.remove('open')" title="বন্ধ করুন">✕</button>
     </div>
     <div id="followUpHistoryContent" style="padding:20px;"></div>
-    <div class="modal-actions" style="margin:20px;">
-      <button class="btn-ghost" onclick="document.getElementById('followUpHistoryModal').classList.remove('open')" style="width:100%">বন্ধ করো</button>
-    </div>
   </div>
 </div>
 <!-- HISAB / PAYMENT MODAL -->
@@ -1148,9 +1143,6 @@ body {
       <button type="button" class="btn-ghost" onclick="closeHisabModal()" style="padding:4px 10px; font-size:16px; border-radius:8px; cursor:pointer;" title="বন্ধ করুন">✕</button>
     </div>
     <div id="hisabContent"></div>
-    <div class="modal-actions" style="margin-top:20px;">
-      <button class="btn-ghost" onclick="closeHisabModal()" style="width:100%">বন্ধ করো</button>
-    </div>
   </div>
 </div>
 
@@ -1162,9 +1154,6 @@ body {
       <button type="button" class="btn-ghost" onclick="closeBirddogHisabModal()" style="padding:4px 10px; font-size:16px; border-radius:8px; cursor:pointer;" title="বন্ধ করুন">✕</button>
     </div>
     <div id="birddogHisabContent"></div>
-    <div class="modal-actions" style="margin-top:20px;">
-      <button class="btn-ghost" onclick="closeBirddogHisabModal()" style="width:100%">বন্ধ করো</button>
-    </div>
   </div>
 </div>
 
