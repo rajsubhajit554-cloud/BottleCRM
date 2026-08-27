@@ -841,9 +841,47 @@ body {
 .hisab-history-header.payment { color: #10b981; }
 
 .hisab-history-list {
-  max-height: 240px;
+  max-height: 160px;
   overflow-y: auto;
   padding-right: 4px;
+}
+@media (max-width: 600px) {
+  .hisab-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .hisab-box {
+    padding: 10px 12px;
+  }
+  .hisab-box-title {
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+  .hisab-form {
+    gap: 5px;
+    margin-bottom: 10px;
+  }
+  .hisab-input {
+    padding: 6px 10px;
+    font-size: 12px;
+    min-width: 80px;
+  }
+  .btn-add-due, .btn-add-payment {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+  .hisab-history-list {
+    max-height: 110px;
+  }
+  .hisab-history-item {
+    padding: 5px 0;
+  }
+  .hisab-history-section-title-container {
+    margin-bottom: 6px;
+  }
+  .hisab-history-header {
+    margin-bottom: 4px;
+  }
 }
 .hisab-history-item {
   display: flex;
@@ -1927,7 +1965,7 @@ function showClientHistory(phone) {
     <div style="background:linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding:14px 16px; color:#fff; display:flex; justify-content:space-between; align-items:center; border-top-left-radius:var(--radius-xl); border-top-right-radius:var(--radius-xl); flex-wrap:wrap; gap:10px;">
       <div style="font-weight:800; font-size:17px; font-family:'Inter',sans-serif; text-transform:uppercase; letter-spacing:-0.3px;">${c.name}</div>
       <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-        <button class="btn" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:#fff; border:none; padding:7px 12px; font-size:11px; border-radius:8px; font-weight:700; cursor:pointer; box-shadow:0 2px 8px rgba(16,185,129,0.3);" onclick="openHisabModal('${c.id}')">💰 পেমেন্ট / হিসাব</button>
+        <button class="btn" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:#fff; border:none; padding:4px 9px; font-size:10.5px; border-radius:6px; font-weight:700; cursor:pointer; box-shadow:0 2px 6px rgba(16,185,129,0.3);" onclick="openHisabModal('${c.id}')">💰 পেমেন্ট / হিসাব</button>
         <button type="button" class="btn" style="background:rgba(255,255,255,0.2); color:#fff; border:none; padding:6px 10px; font-size:13px; border-radius:8px; font-weight:700; cursor:pointer; backdrop-filter:blur(4px);" onclick="document.getElementById('clientHistoryModal').classList.remove('open')" title="বন্ধ করুন">✕ বন্ধ</button>
       </div>
     </div>
@@ -2249,7 +2287,7 @@ function openHisabModal(id) {
   }
   
   // Update Header Title
-  document.getElementById('hisabModalTitle').innerHTML = `<span style="display:flex; align-items:center; justify-content:center; gap:8px; background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:#fff; padding:10px 16px; border-radius:12px; font-weight:700; box-shadow:0 4px 14px rgba(16,185,129,0.25);"><span>💰</span> পেমেন্ট / হিসাব</span>`;
+  document.getElementById('hisabModalTitle').innerHTML = `<span style="display:flex; align-items:center; justify-content:center; gap:6px; background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:#fff; padding:4px 10px; border-radius:8px; font-weight:700; font-size:13px; box-shadow:0 2px 8px rgba(16,185,129,0.25);"><span>💰</span> পেমেন্ট / হিসাব</span>`;
   
   renderHisabContent(id);
   document.getElementById('hisabModal').classList.add('open');
@@ -2452,7 +2490,7 @@ function openBirddogHisabModal(id) {
   }
   
   // Update Header Title
-  document.getElementById('birddogHisabModalTitle').innerHTML = `<span style="display:flex; align-items:center; justify-content:center; gap:8px; background:linear-gradient(135deg, #c084fc 0%, #9333ea 100%); color:#fff; padding:10px 16px; border-radius:12px; font-weight:700; box-shadow:0 4px 14px rgba(192,132,252,0.25);"><span>💰</span> Birddog পেমেন্ট / হিসাব</span>`;
+  document.getElementById('birddogHisabModalTitle').innerHTML = `<span style="display:flex; align-items:center; justify-content:center; gap:6px; background:linear-gradient(135deg, #c084fc 0%, #9333ea 100%); color:#fff; padding:4px 10px; border-radius:8px; font-weight:700; font-size:13px; box-shadow:0 2px 8px rgba(192,132,252,0.25);"><span>💰</span> Birddog পেমেন্ট / হিসাব</span>`;
   
   renderBirddogHisabContent(id);
   document.getElementById('birddogHisabModal').classList.add('open');
