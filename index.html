@@ -207,6 +207,27 @@ body {
   box-shadow: 0 0 14px rgba(163, 230, 53, 0.15);
 }
 
+@media (max-width: 600px) {
+  .topbar-actions {
+    padding: 6px 8px !important;
+    gap: 4px;
+  }
+  .logo {
+    font-size: 15px;
+    margin-right: 2px;
+    gap: 4px;
+  }
+  .logo img {
+    height: 24px !important;
+    width: 24px !important;
+  }
+  .tb-btn {
+    padding: 5px 6px;
+    font-size: 10px;
+    gap: 2px;
+  }
+}
+
 /* ── TOAST ── */
 .toast {
   position: fixed;
@@ -930,7 +951,7 @@ body {
       <img src="favicon.png" alt="BottleCRM Logo" style="height: 30px; width: 30px; border-radius: 8px;">
       Bottle<span>CRM</span>
     </div>
-    <div style="display:flex; gap:6px; align-items:center;">
+    <div style="display:flex; gap:4px; align-items:center; flex-shrink:0;">
       <button class="tb-btn" id="btnNotification" onclick="toggleNotificationPermission()" title="নোটিফিকেশন চালু করুন" style="font-size:13px;">🔔</button>
       <button class="tb-btn" id="btnUndo" onclick="undo()" title="Undo (Ctrl+Z)" style="opacity:0.3; cursor:default;">↩</button>
       <button class="tb-btn" id="btnRedo" onclick="redo()" title="Redo (Ctrl+Y)" style="opacity:0.3; cursor:default;">↪</button>
