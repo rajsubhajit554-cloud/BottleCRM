@@ -1626,21 +1626,26 @@ function setFuFilter(filter) {
 
 function renderFollowup() {
   checkAutoAdvance();
-  let today = customers.filter(c => daysUntil(c.followup) === 0);
-  let urgent = customers.filter(c => { const d = daysUntil(c.followup); return d !== null && d < 0; });
-  let soon = customers.filter(c => { const d = daysUntil(c.followup); return d !== null && d > 0 && d <= 7; });
+  
+  let allFu = customers.filter(c => c.followup);
   
   if (currentFuFilter !== 'all') {
-    today = today.filter(c => c.status === currentFuFilter);
-    urgent = urgent.filter(c => c.status === currentFuFilter);
-    soon = soon.filter(c => c.status === currentFuFilter);
+    if (currentFuFilter === 'customer') {
+      allFu = allFu.filter(c => c.status === 'customer' || !c.status || (c.status !== 'prospect' && c.status !== 'birddog'));
+    } else {
+      allFu = allFu.filter(c => c.status === currentFuFilter);
+    }
   }
+  
+  let today = allFu.filter(c => daysUntil(c.followup) === 0);
+  let urgent = allFu.filter(c => { const d = daysUntil(c.followup); return d !== null && d < 0; });
+  let upcoming = allFu.filter(c => { const d = daysUntil(c.followup); return d !== null && d > 0; });
   
   today.sort((a,b) => (a.name || '').localeCompare(b.name || ''));
   urgent.sort((a,b) => new Date(a.followup) - new Date(b.followup));
-  soon.sort((a,b) => new Date(a.followup) - new Date(b.followup));
+  upcoming.sort((a,b) => new Date(a.followup) - new Date(b.followup));
   
-  const list = [...today, ...urgent, ...soon];
+  const list = [...today, ...urgent, ...upcoming];
   document.getElementById('fuHeading').textContent = `Follow-up লিস্ট (${list.length})`;
   if(!list.length){
     document.getElementById('followupList').innerHTML = `<div class="empty-state"><div class="empty-icon">🎉</div><div class="empty-title">সব follow-up done!</div></div>`;
@@ -1649,12 +1654,14 @@ function renderFollowup() {
   document.getElementById('followupList').innerHTML = list.map(c=>{
     const days = daysUntil(c.followup);
     const isToday = days === 0;
-    const st = isToday ? 'today' : (days < 0 ? 'urgent' : 'soon');
-    const dayTxt = days < 0 ? `${Math.abs(days)} দিন আগে ছিল` : (days === 0 ? 'আজকেই!' : (days === 1 ? 'আগামীকাল' : `${days} দিন বাকি`));
-    const badgeClass = isToday ? 'accent' : (days < 0 ? 'red' : 'yellow');
-    const textColor = isToday ? 'var(--accent)' : (days < 0 ? 'var(--danger)' : 'var(--warning)');
+    const isUrgent = days < 0;
+    const isSoon = days > 0 && days <= 7;
+    const st = isToday ? 'today' : (isUrgent ? 'urgent' : (isSoon ? 'soon' : 'upcoming'));
+    const dayTxt = isUrgent ? `${Math.abs(days)} দিন আগে ছিল` : (isToday ? 'আজকেই!' : (days === 1 ? 'আগামীকাল' : `${days} দিন বাকি`));
+    const badgeClass = isToday ? 'accent' : (isUrgent ? 'red' : (isSoon ? 'yellow' : 'blue'));
+    const textColor = isToday ? 'var(--accent)' : (isUrgent ? 'var(--danger)' : (isSoon ? 'var(--warning)' : 'var(--text-secondary)'));
     return `<div class="fu-item ${st}" style="${isToday ? 'border-color:rgba(163,230,53,0.35); background:rgba(163,230,53,0.04);' : ''}">
-      <div class="badge badge-${badgeClass}" style="${isToday ? 'background:var(--accent); box-shadow:0 0 8px rgba(163,230,53,0.6);' : ''}"></div>
+      <div class="badge badge-${badgeClass}" style="${isToday ? 'background:var(--accent); box-shadow:0 0 8px rgba(163,230,53,0.6);' : (badgeClass === 'blue' ? 'background:#38bdf8;' : '')}"></div>
       <div class="fu-info">
         <div class="fu-name">${c.name}</div>
         <div class="fu-detail">${typeLabel[c.type] || c.type || 'Customer'} · ${c.notes?c.notes.substring(0,50):'—'}</div>
