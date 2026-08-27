@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bottlecrm-cache-v3';
+const CACHE_NAME = 'bottlecrm-cache-v4';
 const urlsToCache = [
   './',
   './index.html',
@@ -40,6 +40,24 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     fetch(event.request).catch(() => {
       return caches.match(event.request);
+    })
+  );
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+      for (const client of clientList) {
+        if ('focus' in client) {
+          client.focus();
+          client.postMessage({ action: 'open_followup' });
+          return;
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow('./#followup');
+      }
     })
   );
 });
